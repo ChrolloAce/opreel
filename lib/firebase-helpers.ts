@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   Timestamp,
+  getDocsFromServer,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
@@ -18,7 +19,9 @@ import { ContentItem, AISettings } from "./content-data";
 export async function fetchUserContent(userId: string): Promise<ContentItem[]> {
   const contentRef = collection(db, "users", userId, "content");
   const q = query(contentRef, orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
+  
+  // Force fetch from server, bypass cache
+  const snapshot = await getDocsFromServer(q);
 
   return snapshot.docs.map((doc) => {
     const data = doc.data();

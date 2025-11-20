@@ -159,27 +159,33 @@ function useDraggable({
       if (node) {
         node.draggable = true;
         node.ondragstart = (e) => {
-          e.dataTransfer!.effectAllowed = "move";
-          e.dataTransfer!.setData("text/plain", id);
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", id);
+          }
           node.style.opacity = "0.5";
         };
         node.ondragend = () => {
           node.style.opacity = "1";
         };
         
-        const column = node.closest('[data-droppable-id]');
+        const column = node.closest('[data-droppable-id]') as HTMLElement | null;
         if (column) {
-          column.ondragover = (e) => {
+          column.ondragover = (e: DragEvent) => {
             e.preventDefault();
-            e.dataTransfer!.dropEffect = "move";
+            if (e.dataTransfer) {
+              e.dataTransfer.dropEffect = "move";
+            }
           };
-          column.ondrop = (e) => {
+          column.ondrop = (e: DragEvent) => {
             e.preventDefault();
-            const draggedId = e.dataTransfer!.getData("text/plain");
-            const droppedOnStatus = column.getAttribute('data-droppable-id') as ContentStatus;
-            
-            if (draggedId && droppedOnStatus) {
-              onStatusChange(draggedId, droppedOnStatus);
+            if (e.dataTransfer) {
+              const draggedId = e.dataTransfer.getData("text/plain");
+              const droppedOnStatus = column.getAttribute('data-droppable-id') as ContentStatus;
+              
+              if (draggedId && droppedOnStatus) {
+                onStatusChange(draggedId, droppedOnStatus);
+              }
             }
           };
         }

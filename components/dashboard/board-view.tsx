@@ -1,19 +1,8 @@
 "use client";
 
 import React from "react";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-} from "@dnd-kit/core";
 import { ContentItem, ContentStatus } from "@/lib/content-data";
 import { ContentCard } from "@/components/dashboard/content-card";
-import { cn } from "@/lib/utils";
 
 interface BoardViewProps {
   items: ContentItem[];
@@ -41,91 +30,27 @@ export function BoardView({
   onDelete,
   onStatusChange,
 }: BoardViewProps) {
-  const [activeId, setActiveId] = React.useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
   const getItemsByStatus = (status: ContentStatus) => {
     return items.filter((item) => item.status === status);
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) {
-      setActiveId(null);
-      return;
-    }
-
-    const itemId = active.id as string;
-    const newStatus = over.id as ContentStatus;
-
-    // Check if dropped on a column
-    if (columns.some((col) => col.id === newStatus)) {
-      const item = items.find((i) => i.id === itemId);
-      if (item && item.status !== newStatus) {
-        onStatusChange(itemId, newStatus);
-      }
-    }
-
-    setActiveId(null);
-  };
-
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
-
-  const activeItem = activeId ? items.find((item) => item.id === activeId) : null;
-
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
-    >
-      <div className="flex gap-4 h-[calc(100vh-180px)] overflow-x-auto pb-4">
-        {columns.map((column) => {
-          const columnItems = getItemsByStatus(column.id);
-          return (
-            <DroppableColumn
-              key={column.id}
-              column={column}
-              items={columnItems}
-              onTitleUpdate={onTitleUpdate}
-              onThumbnailUpdate={onThumbnailUpdate}
-              onDelete={onDelete}
-              onStatusChange={onStatusChange}
-            />
-          );
-        })}
-      </div>
-
-      <DragOverlay>
-        {activeItem ? (
-          <div className="bg-background rounded-lg p-2 opacity-90 shadow-xl rotate-3">
-            <ContentCard
-              item={activeItem}
-              onTitleUpdate={onTitleUpdate}
-              onThumbnailUpdate={onThumbnailUpdate}
-              onDelete={onDelete}
-              onStatusChange={onStatusChange}
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+    <div className="flex gap-4 h-[calc(100vh-180px)] overflow-x-auto pb-4">
+      {columns.map((column) => {
+        const columnItems = getItemsByStatus(column.id);
+        return (
+          <DroppableColumn
+            key={column.id}
+            column={column}
+            items={columnItems}
+            onTitleUpdate={onTitleUpdate}
+            onThumbnailUpdate={onThumbnailUpdate}
+            onDelete={onDelete}
+            onStatusChange={onStatusChange}
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -200,26 +125,15 @@ function DraggableCard({
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { setNodeRef } = useDraggable({
     id: item.id,
+    onStatusChange,
   });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className={cn(
-        "bg-background rounded-lg p-2 cursor-grab active:cursor-grabbing transition-opacity",
-        isDragging && "opacity-50"
-      )}
+      className="bg-background rounded-lg p-2 cursor-grab active:cursor-grabbing"
     >
       <ContentCard
         item={item}
@@ -232,26 +146,25 @@ function DraggableCard({
   );
 }
 
-// Simple useDraggable hook
-function useDraggable({ id }: { id: string }) {
-  const [isDragging, setIsDragging] = React.useState(false);
-
+// Simple useDraggable hook using native HTML5 drag and drop
+function useDraggable({ 
+  id, 
+  onStatusChange 
+}: { 
+  id: string;
+  onStatusChange: (id: string, status: ContentStatus) => void;
+}) {
   return {
-    attributes: {
-      role: "button",
-      "aria-pressed": isDragging,
-      "data-draggable-id": id,
-    },
-    listeners: {
-      onPointerDown: () => setIsDragging(true),
-      onPointerUp: () => setIsDragging(false),
-    },
     setNodeRef: (node: HTMLElement | null) => {
       if (node) {
         node.draggable = true;
         node.ondragstart = (e) => {
           e.dataTransfer!.effectAllowed = "move";
           e.dataTransfer!.setData("text/plain", id);
+          node.style.opacity = "0.5";
+        };
+        node.ondragend = () => {
+          node.style.opacity = "1";
         };
         
         const column = node.closest('[data-droppable-id]');
@@ -272,8 +185,6 @@ function useDraggable({ id }: { id: string }) {
         }
       }
     },
-    transform: null,
-    isDragging,
   };
 }
 

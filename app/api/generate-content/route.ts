@@ -136,19 +136,49 @@ Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["t
     const responseText = completion.choices[0]?.message?.content?.trim();
     
     if (!responseText) {
+      console.error("No response from OpenAI");
       throw new Error("No response from OpenAI");
     }
 
-    // Parse the JSON response
+    // Parse the JSON response - handle markdown code blocks
     let ideas: string[];
     try {
-      ideas = JSON.parse(responseText);
+      // Remove markdown code blocks if present
+      let cleanedText = responseText;
+      if (responseText.includes("```")) {
+        // Extract JSON from markdown code block
+        const match = responseText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+        if (match) {
+          cleanedText = match[1];
+        } else {
+          // Try to find any JSON array
+          const arrayMatch = responseText.match(/\[[\s\S]*\]/);
+          if (arrayMatch) {
+            cleanedText = arrayMatch[0];
+          }
+        }
+      }
+
+      ideas = JSON.parse(cleanedText);
+      
       if (!Array.isArray(ideas)) {
+        console.error("Response is not an array:", cleanedText);
         throw new Error("Response is not an array");
       }
+
+      // Validate that all items are strings
+      ideas = ideas.filter(item => typeof item === "string" && item.trim().length > 0);
+      
+      if (ideas.length === 0) {
+        console.error("No valid ideas in response:", cleanedText);
+        throw new Error("No valid ideas generated");
+      }
+
+      console.log(`Successfully generated ${ideas.length} ideas`);
     } catch (parseError) {
       console.error("Failed to parse OpenAI response:", responseText);
-      throw new Error("Invalid response format from AI");
+      console.error("Parse error:", parseError);
+      throw new Error("Invalid response format from AI. Please try again.");
     }
 
     return NextResponse.json({ ideas });

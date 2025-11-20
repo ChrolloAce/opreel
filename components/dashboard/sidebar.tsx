@@ -12,6 +12,7 @@ import {
   Youtube,
   Twitter,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -64,6 +65,12 @@ export function Sidebar({
                 label="Dashboard"
                 isActive={pathname === "/dashboard"}
                 onClick={() => router.push("/dashboard")}
+              />
+              <SidebarItem
+                icon={<Sparkles className="w-4 h-4 text-primary" />}
+                label="AI Generate"
+                isActive={pathname === "/generate"}
+                onClick={() => router.push("/generate")}
               />
               <SidebarItem
                 icon={<Library className="w-4 h-4" />}

@@ -60,7 +60,7 @@ export function ContextSettings({ settings, onSave }: ContextSettingsProps) {
           <Textarea
             id="aboutYou"
             placeholder="Tell us about yourself, your journey, your goals... The more specific, the better."
-            className="min-h-[200px] resize-none"
+            className="min-h-[180px] resize-none"
             value={formData.aboutYou}
             onChange={(e) => handleChange("aboutYou", e.target.value)}
             maxLength={maxChars}
@@ -74,6 +74,22 @@ export function ContextSettings({ settings, onSave }: ContextSettingsProps) {
               {aboutYouCount}/{maxChars}
             </span>
           </div>
+        </div>
+
+        {/* Detailed Instructions */}
+        <div className="space-y-2">
+          <Label htmlFor="detailedInstructions">Detailed Generation Instructions</Label>
+          <Textarea
+            id="detailedInstructions"
+            placeholder="Add specific instructions for AI generation... e.g., 'Always capitalize specific words like AI, App, MRR. Use numbers and timeframes. Be bold and results-focused.'"
+            className="min-h-[180px] resize-none"
+            value={formData.detailedInstructions}
+            onChange={(e) => handleChange("detailedInstructions", e.target.value)}
+            maxLength={maxChars}
+          />
+          <p className="text-xs text-muted-foreground">
+            Specific formatting rules, style preferences, and generation guidelines
+          </p>
         </div>
 
         {/* Tone */}

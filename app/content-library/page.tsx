@@ -18,6 +18,7 @@ import {
 
 const defaultSettings: AISettings = {
   aboutYou: "",
+  detailedInstructions: "",
   tone: "",
   targetAudience: "",
   contentPillars: "",

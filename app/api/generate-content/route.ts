@@ -24,159 +24,144 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build custom prompt instruction
-    let customPromptInstruction = "";
-    if (customPrompt && customPrompt.trim()) {
-      customPromptInstruction = `\n\nCUSTOM INSTRUCTIONS (Follow these as primary guidance):\n${customPrompt.trim()}`;
-    }
+    // Build the prompt hierarchy (custom prompt has HIGHEST priority)
+    const hasCustomPrompt = customPrompt && customPrompt.trim();
+    
+    const customPromptSection = hasCustomPrompt
+      ? `\n\n🎯 PRIMARY DIRECTIVE - CUSTOM INSTRUCTIONS (THIS OVERRIDES EVERYTHING ELSE):\n${customPrompt.trim()}\n\n⚠️ CRITICAL: These custom instructions are THE MOST IMPORTANT. Follow them above all else. They define what topics and angles to focus on.`
+      : '';
 
-    // Build the prompt with style examples prominently featured
-    const contentType = platform === "youtube" ? "YouTube video titles" : "X/Twitter posts";
     const styleExamplesText = styleExamples && styleExamples.length > 0
-      ? `\n\nSTYLE EXAMPLES (Study these CAREFULLY - match this exact style, tone, and structure):\n${styleExamples.map((ex: string, i: number) => `${i + 1}. ${ex}`).join('\n')}`
+      ? `\n\n📝 WRITING STYLE REFERENCE (Study the WRITING STYLE ONLY - not the topics):\n${styleExamples.map((ex: string, i: number) => `${i + 1}. ${ex}`).join('\n')}\n\n⚠️ IMPORTANT: These examples show you HOW to write (tone, structure, punctuation, capitalization). DO NOT copy the topics/concepts - only the writing style, rhythm, and formatting.`
       : '';
 
     const detailedInstructionsText = userContext.detailedInstructions
-      ? `\n\nDETAILED INSTRUCTIONS (Follow these EXACTLY):\n${userContext.detailedInstructions}`
+      ? `\n\n📋 DETAILED RULES (Follow these STRICTLY):\n${userContext.detailedInstructions}`
       : '';
 
     let prompt = "";
     
     if (platform === "x") {
       // X/Twitter specific prompt for full tweets
-      prompt = `You are an expert X/Twitter content creator crafting viral tweets for a successful entrepreneur.
+      prompt = `You are an expert X/Twitter content creator. Your job is to write viral tweets that match a specific writing style while following custom instructions.
 
 ABOUT THE CREATOR:
 ${userContext.aboutYou || "An ambitious entrepreneur building and scaling digital products."}
 
-STYLE GUIDELINES:
+BASE STYLE GUIDELINES:
 • Tone: ${userContext.tone || "Confident, transparent, results-driven"}
 • Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
 • Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
-• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptInstruction}${styleExamplesText}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptSection}${styleExamplesText}
 
-TWEET WRITING RULES:
+MANDATORY WRITING RULES (NON-NEGOTIABLE):
 1. Write COMPLETE, STANDALONE tweets (not just titles or hooks)
 2. Each tweet should be 100-280 characters (full tweet length)
-3. Use line breaks for readability when appropriate (2-3 line tweets work great)
+3. Use line breaks for readability (2-3 line tweets work great)
 4. Include numbers, metrics, and results when relevant
 5. Use emojis sparingly (max 1-2 per tweet, and only when natural)
-6. Capitalize: App, AI, Apps, SaaS, MRR, ARR, Users
-7. Be conversational and authentic - write like you're talking to a friend
-8. End with a hook, question, or call to action when appropriate
-9. Match the style examples above - study their structure, voice, and formatting
-10. Vary tweet types: stats, lessons, hot takes, questions, updates, stories
+6. ALWAYS capitalize: App, AI, Apps, SaaS, MRR, ARR, Users
+7. Be conversational and authentic
+8. Match the WRITING STYLE from the examples (tone, structure, punctuation)
+9. Vary tweet types: stats, lessons, hot takes, questions, updates, stories
 
-TWEET TYPES TO GENERATE:
-- Personal wins and results
-- Quick tips and insights
-- Bold statements and hot takes
-- Behind-the-scenes updates
-- Engaging questions
-- Lessons learned
-- Progress updates
+${hasCustomPrompt ? '⚠️ REMEMBER: Follow the custom instructions above for WHAT to write about. Use the style examples for HOW to write.' : ''}
 
 Generate exactly ${quantity} complete X/Twitter posts. Each should be engaging, authentic, and ready to post.
 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["tweet 1", "tweet 2", ...].`;
     } else {
       // YouTube titles prompt
-      prompt = `You are an expert YouTube title creator. Your ONLY job is to analyze the style examples provided and create titles that are INDISTINGUISHABLE from them.
+      prompt = `You are an expert YouTube title creator. Your job is to create titles that match a specific writing style while following custom topic instructions.
 
 ABOUT THE CREATOR:
 ${userContext.aboutYou || "An ambitious entrepreneur building and scaling digital products."}
 
-CREATOR'S VOICE & RULES:
+BASE CREATOR GUIDELINES:
 • Tone: ${userContext.tone || "Confident, transparent, results-driven"}
 • Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
 • Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
-• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptInstruction}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptSection}${styleExamplesText}
 
-${styleExamplesText}
+MANDATORY WRITING STYLE RULES (MUST FOLLOW ALL - NON-NEGOTIABLE):
 
-MANDATORY STYLE RULES (MUST FOLLOW ALL):
+1. WRITING STYLE FROM EXAMPLES (Copy HOW they write, NOT WHAT they write about):
+   - Study the STRUCTURE and RHYTHM - how sentences flow
+   - Study the PUNCTUATION - "…" vs "..." vs parentheses
+   - Study the TONE - confident, personal, results-driven
+   - Study the FORMATTING - where numbers go, how context is added
+   - DO NOT copy the topics/concepts - only the writing style
 
-1. STUDY THE EXAMPLES ABOVE:
-   - Every title you generate MUST match the exact patterns, structure, and voice of these examples
-   - If the examples use "I Built" - you use "I Built"
-   - If the examples say "$30K/Month" - you say amounts like "$30K/Month" or "$52K/Month"
-   - If the examples use "…" - you use "…" (NOT "...")
-   - Copy the rhythm, flow, and sentence structure
+2. CAPITALIZATION (ABSOLUTELY CRITICAL - NO EXCEPTIONS):
+   - App → ALWAYS capitalize (never "app")
+   - AI → ALWAYS capitalize (never "ai" or "Ai")
+   - MRR → ALWAYS capitalize (never "mrr" or "Mrr")
+   - SaaS → ALWAYS capitalize (never "saas" or "Saas")
+   - Apps → ALWAYS capitalize (never "apps")
+   - Check EVERY title before finalizing
 
-2. CAPITALIZATION (CRITICAL):
-   - App → ALWAYS capitalize
-   - AI → ALWAYS capitalize  
-   - MRR → ALWAYS capitalize
-   - SaaS → ALWAYS capitalize
-   - Apps → ALWAYS capitalize
-   - Other tech terms: Keep as shown in examples
+3. PUNCTUATION (STRICT RULES):
+   - Use "…" (ellipsis character) NOT "..." (three periods)
+   - Use parentheses for context: (NO CODE), (Here's How), (Steal This Strategy)
+   - Never use question marks - use statements instead
 
-3. NUMBERS & METRICS (REQUIRED):
-   - MUST include specific dollar amounts: $10K, $30K, $52,000, $300K
-   - MUST include timeframes: 14 Days, 48 Hours, 21 Days, 90 Days
-   - Use exact formats from examples (e.g., "$30K/Month" not "$30k per month")
+4. NUMBERS & METRICS (REQUIRED IN EVERY TITLE):
+   - MUST include specific dollar amounts: $10K, $30K, $52,000, $100K, $300K
+   - MUST include timeframes: 14 Days, 48 Hours, 21 Days, 67 Minutes, 90 Days
+   - Use exact formats: "$30K/Month" NOT "$30k per month" or "$30,000/mo"
    - Numbers should be bold and aspirational
 
-4. STRUCTURE PATTERNS FROM EXAMPLES:
-   - "I [Action] [Thing]... Now [Result]" (e.g., "I Built This App in 14 Days… Now It Makes $30K/Month")
-   - "[Action] [Thing] [Result] ([Context])" (e.g., "How I Build Profitable Apps FAST (No Code)")
-   - "The [Thing] I Used To [Action] and [Result]" (e.g., "The Tech Stack I Used To Build 10 AI Apps and Hit $52,000 MRR")
-   - Use parentheses for context: (NO CODE), (Here's How), (It's Not Hard…)
+5. STRUCTURE PATTERNS (Use these as templates):
+   - "I [Action] [Thing]… Now [Result]" → "I Built This App in 14 Days… Now It Makes $30K/Month"
+   - "Steal This [Thing] Strategy" → "Steal This $100K/Mo Slideshow App Strategy"
+   - "How I [Action] to [Result]" → "How I Went From Broke To Retiring My Mom at 21"
+   - "The [Thing] I Used To [Action]" → "The Tech Stack I Used To Build 10 AI Apps and Hit $52,000 MRR"
+   - "[Action] [Thing] ([Context])" → "How I Build Profitable Apps FAST (No Code)"
 
-5. FORBIDDEN PATTERNS (NEVER USE):
-   - Generic phrases like "From Broke to" or "They Said" - these are CLICHÉS
-   - Three dots "..." - ONLY use "…" (em dash)
-   - Lowercase "app", "ai", "mrr" - MUST capitalize
-   - Vague numbers - be SPECIFIC
-   - Questions - use statements
-   - "Want $X?" format - this is weak
+6. FORBIDDEN PATTERNS (NEVER EVER USE THESE):
+   - Three dots "..." → ONLY use "…"
+   - Lowercase tech terms → ALWAYS capitalize App, AI, MRR, SaaS, Apps
+   - Vague numbers → be SPECIFIC ($30K not "a lot of money")
+   - Questions → use statements
+   - Generic phrases like "From Broke to" without specifics
+   - "Want $X?" format → this is weak, use statements
 
-6. TONE & VOICE (EXACT MATCH):
-   - Confident and transparent (show real numbers)
-   - Personal and authentic (use "I", "My")
-   - Results-focused (always show outcomes)
-   - Slightly provocative but not clickbait
-   - Match the exact energy level of the examples
+7. CONTENT VARIETY (Generate diverse topics):
+   ${hasCustomPrompt 
+     ? '- Follow the custom instructions for WHAT topics to cover\n   - Explore different angles within those topics\n   - Vary time periods: 10 Minutes, 48 Hours, 14 Days, 21 Days, 90 Days, 6 Months\n   - Vary results: $1K/Day, $10K/Month, $50K MRR, $100K/Year, $300K, 1M Users'
+     : '- Explore different aspects: building, launching, scaling, monetizing, cloning, stealing strategies\n   - Case studies of other Apps: "Steal This $100K/Mo Slideshow App Strategy"\n   - Vary time periods: 10 Minutes, 48 Hours, 14 Days, 21 Days, 90 Days, 6 Months\n   - Vary results: $1K/Day, $10K/Month, $50K MRR, $100K/Year, $300K, 1M Users\n   - Include unexpected angles: "Vibe-Coded", "With ONE Prompt", "While I Sleep"\n   - Mix types: personal wins, case studies, tutorials, lessons, comparisons, strategies to steal'
+   }
 
-7. WHAT MAKES A TITLE GREAT (from examples):
-   - Specific time (14 Days, 48 Hours, 67 Minutes)
-   - Specific money ($30K/Month, $52,000 MRR)
-   - Personal action (I Built, I Made, I Turned)
-   - Unexpected element (While I Sleep, With ONE Prompt)
-   - Context in parentheses when needed
+8. EXAMPLE TITLE PATTERNS (Different angles to explore):
+   - Personal case study: "I Built This App in 14 Days… Now It Makes $30K/Month"
+   - Steal/copy strategy: "Steal This $100K/Mo Slideshow App Strategy" 
+   - Cloning: "I Cloned a $300M/Year App in 67 Minutes"
+   - Unexpected hook: "I Vibe-Coded an App That Makes $1,000/Day While I Sleep"
+   - Tech stack reveal: "The Tech Stack I Used To Build 10 AI Apps and Hit $52,000 MRR"
+   - Life change: "How Building Apps With AI Got Me This Penthouse"
+   - Fast execution: "I Built & Launched an Entire App With ONE Prompt"
+   - Lesson/tutorial: "The Easiest Way To Build Your App in 20 Minutes"
+   - Collection: "100 Micro-App Ideas You Can Build in 48 Hours To Print Cash"
 
-8. CONTENT VARIETY (CRITICAL):
-   - Generate FRESH, DIVERSE topics - don't repeat the same ideas
-   - Explore different aspects: building, launching, scaling, monetizing, cloning, failing, pivoting
-   - Vary the time periods: 10 Minutes, 48 Hours, 7 Days, 21 Days, 90 Days, 6 Months
-   - Vary the results: $1K/Day, $10K/Month, $50K MRR, $100K/Year, 1M Users, etc.
-   - Mix content types: case studies, tutorials, lessons, comparisons, behind-the-scenes
-   - Include unexpected angles: "Gooning Into a $300K App", "Vibe-Coded", "One Prompt"
-   - Be creative with the journey: retired mom, got penthouse, quit job, rejected offer
-   - Vary the App concept: simple App, micro-App, AI App, cloned App, one-feature App
-
-9. FRESH IDEA EXAMPLES (use as inspiration for variety):
-   - "I Cloned a $300M/Year App in 67 Minutes"
-   - "How Building Apps With AI Got Me This Penthouse"
-   - "I Turned Gooning Into a $300K/Year App"
-   - "I Vibe-Coded an App That Makes $1,000/Day While I Sleep"
-   - "I Built & Launched an Entire App With ONE Prompt"
-   - "100 Micro-App Ideas You Can Build in 48 Hours To Print Cash"
-   - "Why I rejected a $150k job offer to build my own startup"
-   - "The Easiest Way To Build Your App in 20 Minutes"
+${hasCustomPrompt ? `
+⚠️⚠️⚠️ CRITICAL REMINDER - CUSTOM INSTRUCTIONS OVERRIDE:
+The custom instructions at the top tell you WHAT topics to focus on.
+The style examples show you HOW to write (structure, tone, punctuation).
+DO NOT ignore the custom instructions - they are the PRIMARY directive.
+Follow them FIRST, then apply the writing style rules.
+⚠️⚠️⚠️
+` : ''}
 
 Generate exactly ${quantity} titles. Each title MUST:
-- Be COMPLETELY UNIQUE and fresh (no generic "I built an app in X days" repeats)
-- Sound like it came from the SAME person who wrote the examples
-- Include specific numbers (time AND money when possible)
-- Follow the capitalization rules EXACTLY
-- Use "…" not "..."
-- Match the structure and patterns from the examples
-- Offer VARIETY in topics, angles, and stories
-- Be unexpected, interesting, and make people curious
+✅ ${hasCustomPrompt ? 'Follow the CUSTOM INSTRUCTIONS for topic/angle' : 'Explore diverse topics and angles'}
+✅ Match the WRITING STYLE from examples (structure, tone, punctuation)
+✅ Include specific numbers (time AND money when possible)
+✅ CAPITALIZE: App, AI, MRR, SaaS, Apps (NO EXCEPTIONS)
+✅ Use "…" NOT "..."
+✅ Be unexpected, interesting, and make people curious
+✅ Sound like the same person who wrote the style examples
 
-Think: "What's a unique story or angle this person could share?"
-NOT: "Let me remix 'I built an app' 10 times"
+${hasCustomPrompt ? '🎯 START WITH: What does the custom prompt want me to write about?\n🎨 THEN APPLY: How do the style examples want me to write it?' : ''}
 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["title 1", "title 2", ...].`;
     }
@@ -186,7 +171,19 @@ Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["t
       messages: [
         {
           role: "system",
-          content: "You are a master at pattern recognition and style replication. Your expertise is analyzing writing samples and creating new content that is IDENTICAL in style, structure, tone, and formatting. You NEVER deviate from the patterns shown in examples. You follow ALL rules with 100% precision. You return ONLY valid JSON arrays of strings.",
+          content: `You are a master content creator with two key abilities:
+1. FOLLOWING INSTRUCTIONS: When given custom instructions, you follow them PRECISELY. They tell you WHAT to write about.
+2. STYLE REPLICATION: You analyze writing samples and match their style EXACTLY. They tell you HOW to write.
+
+You NEVER mix these up. Custom instructions = topic/angle. Style examples = tone/structure/formatting.
+
+You follow ALL rules with 100% precision, especially:
+- Capitalization (App, AI, MRR, SaaS, Apps - NEVER lowercase)
+- Punctuation ("…" not "...")
+- Custom instructions (highest priority for content direction)
+- Style matching (for writing structure and tone)
+
+You return ONLY valid JSON arrays of strings. No markdown, no explanations.`,
         },
         {
           role: "user",

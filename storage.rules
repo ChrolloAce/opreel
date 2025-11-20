@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the file
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // User thumbnails - users can only upload/read their own thumbnails
+    match /users/{userId}/thumbnails/{allPaths=**} {
+      allow read: if isOwner(userId);
+      allow write, delete: if isOwner(userId) 
+        && request.resource.size < 5 * 1024 * 1024 // 5MB max
+        && request.resource.contentType.matches('image/.*'); // Only images
+    }
+    
+    // User videos - users can only upload/read their own videos
+    match /users/{userId}/videos/{allPaths=**} {
+      allow read: if isOwner(userId);
+      allow write, delete: if isOwner(userId)
+        && request.resource.size < 500 * 1024 * 1024 // 500MB max
+        && request.resource.contentType.matches('video/.*'); // Only videos
+    }
+    
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

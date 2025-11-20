@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Youtube, Twitter, Layers } from "lucide-react";
+import { Youtube, Twitter, Layers, Save, Loader2 } from "lucide-react";
 import { ContentItem, Platform } from "@/lib/content-data";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ interface StyleLibraryProps {
   selectedYouTubeIds: string[];
   selectedXIds: string[];
   onSelectionChange: (youtubeIds: string[], xIds: string[]) => void;
+  onSave: () => Promise<void>;
 }
 
 export function StyleLibrary({
@@ -21,8 +23,26 @@ export function StyleLibrary({
   selectedYouTubeIds,
   selectedXIds,
   onSelectionChange,
+  onSave,
 }: StyleLibraryProps) {
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [initialYouTubeIds, setInitialYouTubeIds] = useState<string[]>([]);
+  const [initialXIds, setInitialXIds] = useState<string[]>([]);
+
+  // Track initial state
+  useEffect(() => {
+    setInitialYouTubeIds(selectedYouTubeIds);
+    setInitialXIds(selectedXIds);
+  }, []);
+
+  // Detect changes
+  useEffect(() => {
+    const ytChanged = JSON.stringify([...selectedYouTubeIds].sort()) !== JSON.stringify([...initialYouTubeIds].sort());
+    const xChanged = JSON.stringify([...selectedXIds].sort()) !== JSON.stringify([...initialXIds].sort());
+    setHasChanges(ytChanged || xChanged);
+  }, [selectedYouTubeIds, selectedXIds, initialYouTubeIds, initialXIds]);
 
   const youtubeContent = content.filter((item) => item.platform === "youtube");
   const xContent = content.filter((item) => item.platform === "x");
@@ -54,18 +74,54 @@ export function StyleLibrary({
 
   const totalSelected = selectedYouTubeIds.length + selectedXIds.length;
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave();
+      // Update initial state after successful save
+      setInitialYouTubeIds(selectedYouTubeIds);
+      setInitialXIds(selectedXIds);
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Error saving selection:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle>Style Library</CardTitle>
-        <CardDescription>
-          Select content that represents your style. The AI will use these as reference examples.
-          {totalSelected > 0 && (
-            <span className="ml-2 text-primary font-semibold">
-              {totalSelected} selected
-            </span>
-          )}
-        </CardDescription>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>Style Library</CardTitle>
+            <CardDescription>
+              Select content that represents your style. The AI will use these as reference examples.
+              {totalSelected > 0 && (
+                <span className="ml-2 text-primary font-semibold">
+                  {totalSelected} selected
+                </span>
+              )}
+            </CardDescription>
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+            className="gap-2"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save Selection
+              </>
+            )}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Platform Filter */}

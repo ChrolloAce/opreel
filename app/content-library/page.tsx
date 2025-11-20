@@ -102,6 +102,17 @@ function AuthenticatedContentLibrary({ user, onSignOut }: { user: any; onSignOut
     }));
   };
 
+  const handleSaveSelection = async () => {
+    if (!user?.uid) return;
+
+    try {
+      await saveAISettings(user.uid, settings);
+    } catch (error) {
+      console.error("Error saving selection:", error);
+      throw error;
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -147,6 +158,7 @@ function AuthenticatedContentLibrary({ user, onSignOut }: { user: any; onSignOut
                 selectedYouTubeIds={settings.selectedYouTubeIds}
                 selectedXIds={settings.selectedXIds}
                 onSelectionChange={handleSelectionChange}
+                onSave={handleSaveSelection}
               />
             </TabsContent>
           </Tabs>

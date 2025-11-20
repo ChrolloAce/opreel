@@ -56,63 +56,35 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-3 overflow-x-auto pb-2">
-        <Tabs
-          value={platformFilter}
-          onValueChange={(v) => onPlatformChange(v as Platform | "all")}
-          className="w-auto"
-        >
-          <TabsList className="bg-transparent h-8 p-0 gap-1">
-            <TabsTrigger 
-              value="all" 
-              className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground h-8 px-4"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger 
-              value="youtube" 
-              className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground h-8 px-4"
-            >
-              YouTube
-            </TabsTrigger>
-            <TabsTrigger 
-              value="x" 
-              className="rounded-full data-[state=active]:bg-card data-[state=active]:text-foreground h-8 px-4"
-            >
-              X
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="rounded-full gap-2 h-8 px-4 border border-border/50">
               <Filter className="w-4 h-4" />
               <span className="capitalize text-sm">
-                {statusFilter === "all" ? "All" : statusFilter}
+                {statusFilter === "all" 
+                  ? "All" 
+                  : statusFilter === "idea" 
+                    ? "Drafts"
+                    : statusFilter === "editing"
+                      ? "In Progress"
+                      : statusFilter === "published"
+                        ? "Done"
+                        : statusFilter}
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem onClick={() => onStatusChange("all")}>
-              All Statuses
+              All
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onStatusChange("idea")}>
-              Idea
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange("script")}>
-              Script
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange("filming")}>
-              Filming
+              Drafts
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onStatusChange("editing")}>
-              Editing
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange("scheduled")}>
-              Scheduled
+              In Progress
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onStatusChange("published")}>
-              Published
+              Done
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

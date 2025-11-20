@@ -6,10 +6,11 @@ import {
   Calendar,
   Library,
   BarChart3,
-  Youtube,
-  Twitter,
   Layers,
   LogOut,
+  Lightbulb,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -82,29 +83,32 @@ export function Sidebar({
 
           <div>
             <h2 className="mb-2 px-2 text-xs font-semibold text-muted-foreground tracking-wider uppercase">
-              Filters
+              Status
             </h2>
             <div className="space-y-1">
               <SidebarItem
                 icon={<Layers className="w-4 h-4" />}
-                label="All Content"
-                isActive={platformFilter === "all" && statusFilter === "all"}
-                onClick={() => {
-                  onPlatformChange("all");
-                  onStatusChange("all");
-                }}
+                label="All"
+                isActive={statusFilter === "all"}
+                onClick={() => onStatusChange("all")}
               />
               <SidebarItem
-                icon={<Youtube className="w-4 h-4 text-red-500" />}
-                label="YouTube"
-                isActive={platformFilter === "youtube"}
-                onClick={() => onPlatformChange("youtube")}
+                icon={<Lightbulb className="w-4 h-4 text-gray-400" />}
+                label="Drafts"
+                isActive={statusFilter === "idea"}
+                onClick={() => onStatusChange("idea")}
               />
               <SidebarItem
-                icon={<Twitter className="w-4 h-4 text-blue-400" />}
-                label="X / Twitter"
-                isActive={platformFilter === "x"}
-                onClick={() => onPlatformChange("x")}
+                icon={<Clock className="w-4 h-4 text-yellow-500" />}
+                label="In Progress"
+                isActive={statusFilter === "editing"}
+                onClick={() => onStatusChange("editing")}
+              />
+              <SidebarItem
+                icon={<CheckCircle2 className="w-4 h-4 text-green-500" />}
+                label="Done"
+                isActive={statusFilter === "published"}
+                onClick={() => onStatusChange("published")}
               />
             </div>
           </div>

@@ -86,7 +86,7 @@ export function StyleLibrary({
           </TabsList>
         </Tabs>
 
-        {/* Content List */}
+        {/* Content Grid */}
         {filteredContent.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <p className="text-sm">No content found.</p>
@@ -95,53 +95,130 @@ export function StyleLibrary({
             </p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
             {filteredContent.map((item) => (
               <div
                 key={item.id}
                 className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg border border-border transition-colors cursor-pointer hover:bg-accent",
-                  isSelected(item.id, item.platform) && "bg-accent border-primary"
+                  "relative rounded-lg border border-border transition-all cursor-pointer hover:border-primary/50 hover:shadow-lg overflow-hidden group",
+                  isSelected(item.id, item.platform) && "border-primary shadow-lg ring-2 ring-primary/20"
                 )}
                 onClick={() => handleToggle(item.id, item.platform)}
               >
-                <Checkbox
-                  checked={isSelected(item.id, item.platform)}
-                  onCheckedChange={() => handleToggle(item.id, item.platform)}
-                  className="mt-1"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-snug line-clamp-2">
+                {/* Thumbnail or Gradient Background */}
+                {item.platform === "youtube" && item.thumbnailUrl ? (
+                  <div className="relative aspect-video bg-muted">
+                    <img
+                      src={item.thumbnailUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    
+                    {/* Checkbox Overlay */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className={cn(
+                        "w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
+                        isSelected(item.id, item.platform)
+                          ? "bg-primary border-primary"
+                          : "bg-background/80 border-border backdrop-blur-sm"
+                      )}>
+                        {isSelected(item.id, item.platform) && (
+                          <svg
+                            className="w-4 h-4 text-primary-foreground"
+                            fill="none"
+                            strokeWidth="2"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Platform Badge */}
+                    <div className="absolute top-2 left-2">
+                      <Badge
+                        variant="secondary"
+                        className="bg-red-600 text-white border-0 text-xs"
+                      >
+                        <Youtube className="w-3 h-3 mr-1" />
+                        YouTube
+                      </Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-primary/5">
+                    {/* Icon for X posts or no thumbnail */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {item.platform === "x" ? (
+                        <Twitter className="w-12 h-12 text-blue-400/50" />
+                      ) : (
+                        <Youtube className="w-12 h-12 text-red-500/50" />
+                      )}
+                    </div>
+                    
+                    {/* Checkbox Overlay */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className={cn(
+                        "w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
+                        isSelected(item.id, item.platform)
+                          ? "bg-primary border-primary"
+                          : "bg-background/80 border-border backdrop-blur-sm"
+                      )}>
+                        {isSelected(item.id, item.platform) && (
+                          <svg
+                            className="w-4 h-4 text-primary-foreground"
+                            fill="none"
+                            strokeWidth="2"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Platform Badge */}
+                    <div className="absolute top-2 left-2">
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "border-0 text-xs",
+                          item.platform === "x"
+                            ? "bg-blue-500 text-white"
+                            : "bg-red-600 text-white"
+                        )}
+                      >
+                        {item.platform === "x" ? (
+                          <>
+                            <Twitter className="w-3 h-3 mr-1" />
+                            X
+                          </>
+                        ) : (
+                          <>
+                            <Youtube className="w-3 h-3 mr-1" />
+                            YouTube
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+
+                {/* Content Info */}
+                <div className="p-3 bg-card">
+                  <p className="text-sm font-medium leading-tight line-clamp-2 mb-2">
                     {item.title}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs",
-                        item.platform === "youtube"
-                          ? "border-red-500/50 text-red-500"
-                          : "border-blue-400/50 text-blue-400"
-                      )}
-                    >
-                      {item.platform === "youtube" ? (
-                        <>
-                          <Youtube className="w-3 h-3 mr-1" />
-                          YouTube
-                        </>
-                      ) : (
-                        <>
-                          <Twitter className="w-3 h-3 mr-1" />
-                          X
-                        </>
-                      )}
-                    </Badge>
-                    {item.views && (
-                      <span className="text-xs text-muted-foreground">
-                        {item.views.toLocaleString()} views
-                      </span>
-                    )}
-                  </div>
+                  {item.views && (
+                    <span className="text-xs text-muted-foreground">
+                      {item.views.toLocaleString()} views
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

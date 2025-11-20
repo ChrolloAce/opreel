@@ -12,6 +12,7 @@ import { Header } from "@/components/dashboard/header";
 import { HeroSection } from "@/components/dashboard/hero-section";
 import { ContentGrid } from "@/components/dashboard/content-grid";
 import { BoardView } from "@/components/dashboard/board-view";
+import { TweetWall } from "@/components/dashboard/tweet-wall";
 import { QuickAddPanel } from "@/components/dashboard/quick-add-panel";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { useAuth } from "@/lib/auth-context";
@@ -24,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Menu, LayoutGrid as GridIcon, Columns } from "lucide-react";
+import { Menu, LayoutGrid as GridIcon, Columns, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -61,7 +62,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [isLoading, setIsLoading] = useState(true);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "board">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "board" | "tweets">("grid");
 
   // Load content from Firebase
   useEffect(() => {
@@ -288,15 +289,19 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
         {/* View Mode Switcher */}
         <div className="flex items-center justify-between mb-6">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "board")}>
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "board" | "tweets")}>
             <TabsList className="bg-card">
               <TabsTrigger value="grid" className="gap-2">
                 <GridIcon className="w-4 h-4" />
-                Grid View
+                Grid
               </TabsTrigger>
               <TabsTrigger value="board" className="gap-2">
                 <Columns className="w-4 h-4" />
-                Board View
+                Board
+              </TabsTrigger>
+              <TabsTrigger value="tweets" className="gap-2">
+                <Twitter className="w-4 h-4" />
+                Tweets
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -304,7 +309,9 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
         {/* Content View */}
         <div className="w-full">
-          <HeroSection items={filteredItems} isLoading={isLoading} />
+          {viewMode !== "tweets" && (
+            <HeroSection items={filteredItems} isLoading={isLoading} />
+          )}
           
           {viewMode === "grid" ? (
             <ContentGrid 
@@ -314,11 +321,18 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />
-          ) : (
+          ) : viewMode === "board" ? (
             <BoardView 
               items={filteredItems}
               onTitleUpdate={handleTitleUpdate}
               onThumbnailUpdate={handleThumbnailUpdate}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          ) : (
+            <TweetWall 
+              items={filteredItems}
+              onTitleUpdate={handleTitleUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />

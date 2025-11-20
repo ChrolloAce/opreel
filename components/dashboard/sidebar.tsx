@@ -11,6 +11,8 @@ import {
   Lightbulb,
   Clock,
   CheckCircle2,
+  Youtube,
+  Twitter,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -77,6 +79,32 @@ export function Sidebar({
                 label="Analytics"
                 isActive={false}
                 onClick={() => {}}
+              />
+            </div>
+          </div>
+
+          <div>
+            <h2 className="mb-2 px-2 text-xs font-semibold text-muted-foreground tracking-wider uppercase">
+              Platform
+            </h2>
+            <div className="space-y-1">
+              <SidebarItem
+                icon={<Layers className="w-4 h-4" />}
+                label="All"
+                isActive={platformFilter === "all"}
+                onClick={() => onPlatformChange("all")}
+              />
+              <SidebarItem
+                icon={<Youtube className="w-4 h-4 text-red-500" />}
+                label="YouTube"
+                isActive={platformFilter === "youtube"}
+                onClick={() => onPlatformChange("youtube")}
+              />
+              <SidebarItem
+                icon={<Twitter className="w-4 h-4 text-blue-400" />}
+                label="X / Twitter"
+                isActive={platformFilter === "x"}
+                onClick={() => onPlatformChange("x")}
               />
             </div>
           </div>

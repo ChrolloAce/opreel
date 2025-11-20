@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Youtube, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ContentItem } from "@/lib/content-data";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContentItem, Platform } from "@/lib/content-data";
 
 interface QuickAddPanelProps {
   onAddItems: (items: ContentItem[]) => void;
@@ -13,6 +14,7 @@ interface QuickAddPanelProps {
 
 export function QuickAddPanel({ onAddItems }: QuickAddPanelProps) {
   const [bulkText, setBulkText] = useState("");
+  const [platform, setPlatform] = useState<Platform>("youtube");
 
   const handleBulkAdd = () => {
     if (!bulkText.trim()) return;
@@ -28,7 +30,7 @@ export function QuickAddPanel({ onAddItems }: QuickAddPanelProps) {
     // Create content items from titles
     const newItems: ContentItem[] = lines.map((title) => ({
       id: Math.random().toString(36).substr(2, 9),
-      platform: "youtube",
+      platform: platform,
       title: title,
       status: "idea",
       createdAt: new Date().toISOString(),
@@ -38,19 +40,39 @@ export function QuickAddPanel({ onAddItems }: QuickAddPanelProps) {
     setBulkText("");
   };
 
+  const itemCount = bulkText.split('\n').filter(line => line.trim().length > 0).length;
+  const itemLabel = platform === "youtube" ? "Videos" : "Tweets";
+
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
-          Add Video Titles
+          Add Content
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
-          Paste your video titles below (one per line)
+          Choose platform and paste your content (one per line)
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Platform Selector */}
+        <Tabs value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
+          <TabsList className="w-full bg-muted">
+            <TabsTrigger value="youtube" className="flex-1 gap-2">
+              <Youtube className="w-4 h-4" />
+              YouTube
+            </TabsTrigger>
+            <TabsTrigger value="x" className="flex-1 gap-2">
+              <Twitter className="w-4 h-4" />
+              X / Twitter
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <Textarea
-          placeholder="Paste your video titles here...&#10;&#10;I Built This App in 14 Days… Now It Makes $30K/Month (NO CODE)&#10;&#10;The Tech Stack I Used To Build 10 AI Apps&#10;&#10;The Gold Rush Is Here: Build an AI App in 48 Hours"
+          placeholder={platform === "youtube" 
+            ? "Paste your video titles here...\n\nI Built This App in 14 Days… Now It Makes $30K/Month\n\nThe Tech Stack I Used To Build 10 AI Apps"
+            : "Paste your tweet ideas here...\n\nJust shipped a new feature 🚀\n\nHere's what I learned building in public..."
+          }
           className="min-h-[300px] font-sans text-sm bg-background/50 border-border/50 resize-none"
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
@@ -58,9 +80,9 @@ export function QuickAddPanel({ onAddItems }: QuickAddPanelProps) {
         
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {bulkText.split('\n').filter(line => line.trim().length > 0).length} titles ready
+            {itemCount} {itemCount === 1 ? "item" : "items"} ready
           </span>
-          <span>Each line = 1 video</span>
+          <span>Each line = 1 {platform === "youtube" ? "video" : "tweet"}</span>
         </div>
 
         <Button 
@@ -69,7 +91,7 @@ export function QuickAddPanel({ onAddItems }: QuickAddPanelProps) {
           disabled={!bulkText.trim()}
         >
           <Plus className="w-4 h-4" />
-          Add {bulkText.split('\n').filter(line => line.trim().length > 0).length || 0} Videos
+          Add {itemCount || 0} {itemLabel}
         </Button>
       </CardContent>
     </Card>

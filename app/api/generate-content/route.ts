@@ -146,20 +146,44 @@ MANDATORY STYLE RULES (MUST FOLLOW ALL):
    - Match the exact energy level of the examples
 
 7. WHAT MAKES A TITLE GREAT (from examples):
-   - Specific time (14 Days, 48 Hours)
+   - Specific time (14 Days, 48 Hours, 67 Minutes)
    - Specific money ($30K/Month, $52,000 MRR)
    - Personal action (I Built, I Made, I Turned)
    - Unexpected element (While I Sleep, With ONE Prompt)
    - Context in parentheses when needed
 
+8. CONTENT VARIETY (CRITICAL):
+   - Generate FRESH, DIVERSE topics - don't repeat the same ideas
+   - Explore different aspects: building, launching, scaling, monetizing, cloning, failing, pivoting
+   - Vary the time periods: 10 Minutes, 48 Hours, 7 Days, 21 Days, 90 Days, 6 Months
+   - Vary the results: $1K/Day, $10K/Month, $50K MRR, $100K/Year, 1M Users, etc.
+   - Mix content types: case studies, tutorials, lessons, comparisons, behind-the-scenes
+   - Include unexpected angles: "Gooning Into a $300K App", "Vibe-Coded", "One Prompt"
+   - Be creative with the journey: retired mom, got penthouse, quit job, rejected offer
+   - Vary the App concept: simple App, micro-App, AI App, cloned App, one-feature App
+
+9. FRESH IDEA EXAMPLES (use as inspiration for variety):
+   - "I Cloned a $300M/Year App in 67 Minutes"
+   - "How Building Apps With AI Got Me This Penthouse"
+   - "I Turned Gooning Into a $300K/Year App"
+   - "I Vibe-Coded an App That Makes $1,000/Day While I Sleep"
+   - "I Built & Launched an Entire App With ONE Prompt"
+   - "100 Micro-App Ideas You Can Build in 48 Hours To Print Cash"
+   - "Why I rejected a $150k job offer to build my own startup"
+   - "The Easiest Way To Build Your App in 20 Minutes"
+
 Generate exactly ${quantity} titles. Each title MUST:
+- Be COMPLETELY UNIQUE and fresh (no generic "I built an app in X days" repeats)
 - Sound like it came from the SAME person who wrote the examples
 - Include specific numbers (time AND money when possible)
 - Follow the capitalization rules EXACTLY
 - Use "…" not "..."
 - Match the structure and patterns from the examples
+- Offer VARIETY in topics, angles, and stories
+- Be unexpected, interesting, and make people curious
 
-If a title doesn't match the examples perfectly, DO NOT include it.
+Think: "What's a unique story or angle this person could share?"
+NOT: "Let me remix 'I built an app' 10 times"
 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["title 1", "title 2", ...].`;
     }

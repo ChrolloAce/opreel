@@ -52,20 +52,32 @@ export default function DashboardPage() {
 function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () => void }) {
   // State
   const [contentItems, setContentItems] =
-    useState<ContentItem[]>(initialContentItems);
+    useState<ContentItem[]>([]);
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
   const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Simulate initial load
+  // Load content from Firebase
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!user?.uid) return;
+
+    const loadContent = async () => {
+      try {
+        const { fetchUserContent } = await import("@/lib/firebase-helpers");
+        const items = await fetchUserContent(user.uid);
+        setContentItems(items);
+      } catch (error) {
+        console.error("Error loading content:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [user?.uid]);
 
   // Spacebar handler
   useEffect(() => {
@@ -98,30 +110,93 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     return matchesPlatform && matchesStatus && matchesSearch;
   });
 
-  const handleAddItems = (newItems: ContentItem[]) => {
-    // Prepend new items
-    setContentItems((prev) => [...newItems, ...prev]);
-    setIsQuickAddOpen(false);
+  const handleAddItems = async (newItems: ContentItem[]) => {
+    if (!user?.uid) return;
+    
+    setIsSaving(true);
+    try {
+      const { addContentItem } = await import("@/lib/firebase-helpers");
+      
+      // Add items to Firebase and get their IDs
+      const addedItems = await Promise.all(
+        newItems.map(async (item) => {
+          const id = await addContentItem(user.uid, item);
+          return { ...item, id };
+        })
+      );
+      
+      // Update local state
+      setContentItems((prev) => [...addedItems, ...prev]);
+      setIsQuickAddOpen(false);
+    } catch (error) {
+      console.error("Error adding items:", error);
+      alert("Failed to add items. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleTitleUpdate = (id: string, newTitle: string) => {
+  const handleTitleUpdate = async (id: string, newTitle: string) => {
+    if (!user?.uid) return;
+    
+    // Optimistic update
     setContentItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, title: newTitle } : item
       )
     );
+
+    try {
+      const { updateContentItem } = await import("@/lib/firebase-helpers");
+      await updateContentItem(user.uid, id, { title: newTitle });
+    } catch (error) {
+      console.error("Error updating title:", error);
+      // Revert on error
+      setContentItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, title: item.title } : item
+        )
+      );
+    }
   };
 
-  const handleThumbnailUpdate = (id: string, newUrl: string) => {
-    setContentItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, thumbnailUrl: newUrl } : item
-      )
-    );
+  const handleThumbnailUpdate = async (id: string, file: File) => {
+    if (!user?.uid) return;
+    
+    try {
+      const { uploadThumbnail, updateContentItem } = await import("@/lib/firebase-helpers");
+      
+      // Upload to Firebase Storage
+      const downloadUrl = await uploadThumbnail(user.uid, file);
+      
+      // Update Firestore
+      await updateContentItem(user.uid, id, { thumbnailUrl: downloadUrl });
+      
+      // Update local state
+      setContentItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, thumbnailUrl: downloadUrl } : item
+        )
+      );
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      alert("Failed to upload thumbnail. Please try again.");
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    if (!user?.uid) return;
+    
+    // Optimistic delete
     setContentItems((prev) => prev.filter((item) => item.id !== id));
+
+    try {
+      const { deleteContentItem } = await import("@/lib/firebase-helpers");
+      await deleteContentItem(user.uid, id);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert("Failed to delete item. Please refresh.");
+    }
   };
 
   return (
@@ -132,6 +207,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
         statusFilter={statusFilter}
         onPlatformChange={setPlatformFilter}
         onStatusChange={setStatusFilter}
+        onSignOut={onSignOut}
       />
 
       {/* Main Content Area */}
@@ -161,6 +237,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
                 onStatusChange={(s) => {
                   setStatusFilter(s);
                 }}
+                onSignOut={onSignOut}
               />
             </SheetContent>
           </Sheet>
@@ -186,27 +263,10 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
           />
         </div>
 
-        {/* Helper Text & User Info */}
-        <div className="fixed bottom-6 right-6 flex flex-col gap-2 items-end">
+        {/* Helper Text */}
+        <div className="fixed bottom-6 right-6">
           <div className="bg-card border border-border rounded-lg px-4 py-2 text-sm text-muted-foreground shadow-lg">
             Press <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-semibold">Space</kbd> to add content
-          </div>
-          <div className="bg-card border border-border rounded-lg px-3 py-2 flex items-center gap-3 shadow-lg">
-            <img 
-              src={user.photoURL || ''} 
-              alt={user.displayName || 'User'} 
-              className="w-6 h-6 rounded-full"
-            />
-            <span className="text-sm font-medium">{user.displayName}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7" 
-              onClick={onSignOut}
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </main>
@@ -217,10 +277,16 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
           <DialogHeader>
             <DialogTitle>Add Content</DialogTitle>
             <DialogDescription>
-              Quickly add single items or bulk paste multiple content ideas.
+              {isSaving ? "Saving your videos..." : "Paste your video titles below"}
             </DialogDescription>
           </DialogHeader>
-          <QuickAddPanel onAddItems={handleAddItems} />
+          {isSaving ? (
+            <div className="flex items-center justify-center py-12">
+              <Skeleton className="h-8 w-8 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <QuickAddPanel onAddItems={handleAddItems} />
+          )}
         </DialogContent>
       </Dialog>
     </div>

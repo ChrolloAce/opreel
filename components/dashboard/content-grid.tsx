@@ -8,7 +8,7 @@ import { LayoutGrid } from "lucide-react";
 interface ContentGridProps {
   items: ContentItem[];
   onTitleUpdate: (id: string, newTitle: string) => void;
-  onThumbnailUpdate: (id: string, newUrl: string) => void;
+  onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
 }
 

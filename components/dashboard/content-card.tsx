@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 interface ContentCardProps {
   item: ContentItem;
   onTitleUpdate: (id: string, newTitle: string) => void;
-  onThumbnailUpdate: (id: string, newUrl: string) => void;
+  onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
 }
 
@@ -66,9 +66,7 @@ export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete }
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create a local URL for the uploaded image
-      const url = URL.createObjectURL(file);
-      onThumbnailUpdate(item.id, url);
+      onThumbnailUpdate(item.id, file);
     }
   };
 

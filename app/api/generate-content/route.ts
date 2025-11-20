@@ -88,31 +88,78 @@ Generate exactly ${quantity} complete X/Twitter posts. Each should be engaging, 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["tweet 1", "tweet 2", ...].`;
     } else {
       // YouTube titles prompt
-      prompt = `You are an expert content strategist creating ${contentType} for a successful entrepreneur.
+      prompt = `You are an expert YouTube title creator. Your ONLY job is to analyze the style examples provided and create titles that are INDISTINGUISHABLE from them.
 
 ABOUT THE CREATOR:
 ${userContext.aboutYou || "An ambitious entrepreneur building and scaling digital products."}
 
-STYLE GUIDELINES:
+CREATOR'S VOICE & RULES:
 • Tone: ${userContext.tone || "Confident, transparent, results-driven"}
 • Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
 • Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
-• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${categoryInstruction}${styleExamplesText}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${categoryInstruction}
 
-CRITICAL FORMATTING RULES:
-1. Study the style examples above - they are PERFECT examples. Match their:
-   - Use of numbers and specific metrics ($30K, 14 Days, etc.)
-   - Capitalization patterns (capitalize: App, AI, MRR, SaaS, etc.)
-   - Emotional hooks and urgency
-   - Personal pronouns (I, My)
-   - Parenthetical additions for context
-2. Use BOLD claims and SPECIFIC numbers
-3. Include timeframes when relevant (14 Days, 48 Hours, 90 Days)
-4. Use "…" for dramatic pauses, not "..."
-5. Capitalize key terms: App, AI, Apps, SaaS, MRR, ARR, Users
-6. Be results-focused with dollar amounts when possible
+${styleExamplesText}
 
-Generate exactly ${quantity} YouTube video titles that are compelling, click-worthy, and match the style examples above EXACTLY.
+MANDATORY STYLE RULES (MUST FOLLOW ALL):
+
+1. STUDY THE EXAMPLES ABOVE:
+   - Every title you generate MUST match the exact patterns, structure, and voice of these examples
+   - If the examples use "I Built" - you use "I Built"
+   - If the examples say "$30K/Month" - you say amounts like "$30K/Month" or "$52K/Month"
+   - If the examples use "…" - you use "…" (NOT "...")
+   - Copy the rhythm, flow, and sentence structure
+
+2. CAPITALIZATION (CRITICAL):
+   - App → ALWAYS capitalize
+   - AI → ALWAYS capitalize  
+   - MRR → ALWAYS capitalize
+   - SaaS → ALWAYS capitalize
+   - Apps → ALWAYS capitalize
+   - Other tech terms: Keep as shown in examples
+
+3. NUMBERS & METRICS (REQUIRED):
+   - MUST include specific dollar amounts: $10K, $30K, $52,000, $300K
+   - MUST include timeframes: 14 Days, 48 Hours, 21 Days, 90 Days
+   - Use exact formats from examples (e.g., "$30K/Month" not "$30k per month")
+   - Numbers should be bold and aspirational
+
+4. STRUCTURE PATTERNS FROM EXAMPLES:
+   - "I [Action] [Thing]... Now [Result]" (e.g., "I Built This App in 14 Days… Now It Makes $30K/Month")
+   - "[Action] [Thing] [Result] ([Context])" (e.g., "How I Build Profitable Apps FAST (No Code)")
+   - "The [Thing] I Used To [Action] and [Result]" (e.g., "The Tech Stack I Used To Build 10 AI Apps and Hit $52,000 MRR")
+   - Use parentheses for context: (NO CODE), (Here's How), (It's Not Hard…)
+
+5. FORBIDDEN PATTERNS (NEVER USE):
+   - Generic phrases like "From Broke to" or "They Said" - these are CLICHÉS
+   - Three dots "..." - ONLY use "…" (em dash)
+   - Lowercase "app", "ai", "mrr" - MUST capitalize
+   - Vague numbers - be SPECIFIC
+   - Questions - use statements
+   - "Want $X?" format - this is weak
+
+6. TONE & VOICE (EXACT MATCH):
+   - Confident and transparent (show real numbers)
+   - Personal and authentic (use "I", "My")
+   - Results-focused (always show outcomes)
+   - Slightly provocative but not clickbait
+   - Match the exact energy level of the examples
+
+7. WHAT MAKES A TITLE GREAT (from examples):
+   - Specific time (14 Days, 48 Hours)
+   - Specific money ($30K/Month, $52,000 MRR)
+   - Personal action (I Built, I Made, I Turned)
+   - Unexpected element (While I Sleep, With ONE Prompt)
+   - Context in parentheses when needed
+
+Generate exactly ${quantity} titles. Each title MUST:
+- Sound like it came from the SAME person who wrote the examples
+- Include specific numbers (time AND money when possible)
+- Follow the capitalization rules EXACTLY
+- Use "…" not "..."
+- Match the structure and patterns from the examples
+
+If a title doesn't match the examples perfectly, DO NOT include it.
 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["title 1", "title 2", ...].`;
     }
@@ -122,14 +169,14 @@ Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["t
       messages: [
         {
           role: "system",
-          content: "You are an expert content strategist who creates viral, results-driven content titles. You always match the exact style and formatting of provided examples. You return ONLY valid JSON arrays.",
+          content: "You are a master at pattern recognition and style replication. Your expertise is analyzing writing samples and creating new content that is IDENTICAL in style, structure, tone, and formatting. You NEVER deviate from the patterns shown in examples. You follow ALL rules with 100% precision. You return ONLY valid JSON arrays of strings.",
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.9,
+      temperature: 0.7,
       max_tokens: 4000,
     });
 

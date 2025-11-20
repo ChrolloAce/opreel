@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { LoginScreen } from "@/components/auth/login-screen";
+import { Sidebar } from "@/components/dashboard/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Youtube, Twitter, Upload, Loader2, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Youtube, Twitter, Upload, Loader2 } from "lucide-react";
+import { Platform, ContentStatus } from "@/lib/content-data";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
@@ -20,8 +23,27 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  return <AuthenticatedSettings user={user} onSignOut={signOut} />;
+}
+
+function AuthenticatedSettings({ user, onSignOut }: { user: any; onSignOut: () => void }) {
   const [settings, setSettings] = useState<UserSettings>({
     youtubeHandle: "",
     youtubeAvatar: "",
@@ -32,6 +54,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingYT, setUploadingYT] = useState(false);
   const [uploadingX, setUploadingX] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
 
   const ytFileInputRef = useRef<HTMLInputElement>(null);
   const xFileInputRef = useRef<HTMLInputElement>(null);
@@ -126,36 +150,38 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard")}
-            className="mb-4 gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground mt-2">
-            Customize your YouTube and X profiles
-          </p>
-        </div>
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar
+        platformFilter={platformFilter}
+        statusFilter={statusFilter}
+        onPlatformChange={setPlatformFilter}
+        onStatusChange={setStatusFilter}
+        onSignOut={onSignOut}
+      />
 
-        <div className="space-y-6">
-          {/* YouTube Settings */}
-          <Card className="border-border bg-card">
+      {/* Main Content */}
+      <main className="flex-1 md:ml-60">
+        <div className="container mx-auto px-6 py-8 max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Settings</h1>
+            <p className="text-muted-foreground">
+              Customize your YouTube and X profiles
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full rounded-xl" />
+              <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+
+            {/* YouTube Settings */}
+            <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Youtube className="w-5 h-5 text-red-500" />
@@ -218,10 +244,10 @@ export default function SettingsPage() {
                 />
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* X/Twitter Settings */}
-          <Card className="border-border bg-card">
+            {/* X/Twitter Settings */}
+            <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Twitter className="w-5 h-5 text-blue-400" />
@@ -284,25 +310,27 @@ export default function SettingsPage() {
                 />
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* Save Button */}
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full h-12 text-base"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Settings"
-            )}
-          </Button>
+            {/* Save Button */}
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full h-12 text-base"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Settings"
+              )}
+            </Button>
+          </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

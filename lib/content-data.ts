@@ -8,6 +8,20 @@ export type ContentStatus =
   | "scheduled"
   | "published";
 
+export interface ScriptSection {
+  id: string;
+  type: "hook" | "intro" | "main" | "cta" | "notes";
+  content: string; // Rich text HTML
+  order: number;
+}
+
+export interface ScriptVersion {
+  id: string;
+  content: ScriptSection[];
+  createdAt: string;
+  label: string; // e.g., "v1", "v2", "final"
+}
+
 export interface ContentItem {
   id: string;
   platform: Platform;
@@ -19,6 +33,14 @@ export interface ContentItem {
   scheduledFor?: string;
   views?: number;
   notes?: string;
+  // Script editor data
+  script?: {
+    sections: ScriptSection[];
+    currentVersion: string; // version id
+    versions: ScriptVersion[];
+    wordCount: number;
+    lastEditedAt: string;
+  };
 }
 
 export interface AISettings {

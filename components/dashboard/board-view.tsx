@@ -11,6 +11,7 @@ interface BoardViewProps {
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  onOpenScript?: (id: string) => void;
   youtubeAvatar?: string;
   youtubeHandle?: string;
   xAvatar?: string;
@@ -34,6 +35,7 @@ export function BoardView({
   onThumbnailUpdate,
   onDelete,
   onStatusChange,
+  onOpenScript,
   youtubeAvatar,
   youtubeHandle,
   xAvatar,
@@ -195,6 +197,7 @@ function DraggableCard({
         onThumbnailUpdate={onThumbnailUpdate}
         onDelete={onDelete}
         onStatusChange={onStatusChange}
+        onOpenScript={onOpenScript}
         youtubeAvatar={youtubeAvatar}
         youtubeHandle={youtubeHandle}
       />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { MoreVertical, Upload, Trash2, CheckCircle2 } from "lucide-react";
+import { MoreVertical, Upload, Trash2, CheckCircle2, FileText } from "lucide-react";
 import { ContentItem, ContentStatus } from "@/lib/content-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ interface ContentCardProps {
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: ContentStatus) => void;
+  onOpenScript?: (id: string) => void;
   youtubeAvatar?: string;
   youtubeHandle?: string;
 }
@@ -34,7 +35,7 @@ const statusColors: Record<ContentStatus, string> = {
   published: "bg-green-600 text-white",
 };
 
-export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange, youtubeAvatar, youtubeHandle }: ContentCardProps) {
+export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange, onOpenScript, youtubeAvatar, youtubeHandle }: ContentCardProps) {
   const statusColorClass = statusColors[item.status];
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(item.title);
@@ -134,6 +135,14 @@ export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, 
           </div>
         </div>
 
+        {/* Script indicator */}
+        {item.script && item.script.wordCount > 0 && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/70 backdrop-blur-sm">
+            <FileText className="w-3 h-3 text-white" />
+            <span className="text-xs text-white font-medium">{item.script.wordCount} words</span>
+          </div>
+        )}
+        
         {/* Duration overlay - Bottom Right (YouTube style) */}
         {item.views !== undefined && (
           <div className="absolute bottom-1 right-1 bg-black/90 text-white text-xs font-semibold px-1 py-0.5 rounded pointer-events-none">
@@ -201,6 +210,15 @@ export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {onOpenScript && (
+              <>
+                <DropdownMenuItem onClick={() => onOpenScript(item.id)}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  {item.script && item.script.wordCount > 0 ? "Edit Script" : "Write Script"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             {onStatusChange && (
               <>
                 <DropdownMenuItem 

@@ -16,6 +16,7 @@ import { BoardView } from "@/components/dashboard/board-view";
 import { TweetWall } from "@/components/dashboard/tweet-wall";
 import { CalendarView } from "@/components/dashboard/calendar-view";
 import { QuickAddPanel } from "@/components/dashboard/quick-add-panel";
+import { ScriptEditorPanel } from "@/components/script-editor/script-editor-panel";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { useAuth } from "@/lib/auth-context";
 import { useUserSettings } from "@/lib/use-user-settings";
@@ -68,6 +69,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [viewMode, setViewMode] = useState<"grid" | "board" | "calendar">("grid");
   const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
+  const [scriptEditorItem, setScriptEditorItem] = useState<ContentItem | null>(null);
   
   // Load user settings
   const { settings } = useUserSettings(user?.uid);
@@ -295,6 +297,34 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     }
   };
 
+  const handleOpenScript = (id: string) => {
+    const item = contentItems.find((i) => i.id === id);
+    if (item) {
+      setScriptEditorItem(item);
+    }
+  };
+
+  const handleScriptUpdate = async (updates: Partial<ContentItem>) => {
+    if (!user?.uid || !scriptEditorItem) return;
+    
+    // Optimistic update
+    setContentItems((prev) =>
+      prev.map((item) =>
+        item.id === scriptEditorItem.id ? { ...item, ...updates } : item
+      )
+    );
+
+    // Update script editor item
+    setScriptEditorItem({ ...scriptEditorItem, ...updates });
+
+    try {
+      const { updateContentItem } = await import("@/lib/firebase-helpers");
+      await updateContentItem(user.uid, scriptEditorItem.id, updates);
+    } catch (error) {
+      console.error("Error updating script:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Sidebar */}
@@ -409,6 +439,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onThumbnailUpdate={handleThumbnailUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              onOpenScript={handleOpenScript}
               youtubeAvatar={settings.youtubeAvatar}
               youtubeHandle={settings.youtubeHandle}
             />
@@ -419,6 +450,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onThumbnailUpdate={handleThumbnailUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              onOpenScript={handleOpenScript}
               youtubeAvatar={settings.youtubeAvatar}
               youtubeHandle={settings.youtubeHandle}
               xAvatar={settings.xAvatar}
@@ -465,6 +497,15 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Script Editor Panel */}
+      {scriptEditorItem && (
+        <ScriptEditorPanel
+          item={scriptEditorItem}
+          onClose={() => setScriptEditorItem(null)}
+          onUpdate={handleScriptUpdate}
+        />
+      )}
     </div>
   );
 }

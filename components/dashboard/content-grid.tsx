@@ -11,11 +11,12 @@ interface ContentGridProps {
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  onOpenScript?: (id: string) => void;
   youtubeAvatar?: string;
   youtubeHandle?: string;
 }
 
-export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange, youtubeAvatar, youtubeHandle }: ContentGridProps) {
+export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange, onOpenScript, youtubeAvatar, youtubeHandle }: ContentGridProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -41,6 +42,7 @@ export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete,
             onThumbnailUpdate={onThumbnailUpdate}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            onOpenScript={onOpenScript}
             youtubeAvatar={youtubeAvatar}
             youtubeHandle={youtubeHandle}
           />

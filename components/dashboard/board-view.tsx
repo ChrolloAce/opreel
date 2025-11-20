@@ -93,7 +93,7 @@ function DroppableColumn({
   return (
     <div
       id={column.id}
-      className="flex-shrink-0 w-[380px] bg-card rounded-xl border border-border flex flex-col"
+      className="flex-shrink-0 w-[340px] bg-card rounded-xl border border-border flex flex-col"
     >
       {/* Column Header */}
       <div className="p-4 border-b border-border">
@@ -168,7 +168,7 @@ function DraggableCard({
     return (
       <div
         ref={setNodeRef}
-        className="bg-[#000000] rounded-lg overflow-hidden cursor-grab active:cursor-grabbing border border-[#2f3336]"
+        className="bg-[#000000] rounded-xl overflow-hidden cursor-grab active:cursor-grabbing border border-[#2f3336]"
       >
         <TweetCard
           item={item}
@@ -177,6 +177,7 @@ function DraggableCard({
           onStatusChange={onStatusChange}
           xAvatar={xAvatar}
           xHandle={xHandle}
+          compact={true}
         />
       </div>
     );

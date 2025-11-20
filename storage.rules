@@ -12,9 +12,9 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // User avatars - anyone can read, only owner can write/delete
+    // User avatars - users can only upload/read their own avatars
     match /users/{userId}/avatars/{allPaths=**} {
-      allow read: if true; // Public read for profile pictures
+      allow read: if isOwner(userId);
       allow write, delete: if isOwner(userId) 
         && request.resource.size < 2 * 1024 * 1024 // 2MB max
         && request.resource.contentType.matches('image/.*'); // Only images

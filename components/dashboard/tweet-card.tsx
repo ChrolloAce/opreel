@@ -21,9 +21,10 @@ interface TweetCardProps {
   onStatusChange?: (id: string, status: ContentStatus) => void;
   xAvatar?: string;
   xHandle?: string;
+  compact?: boolean; // For grid view
 }
 
-export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvatar, xHandle }: TweetCardProps) {
+export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvatar, xHandle, compact = false }: TweetCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(item.title);
 
@@ -74,20 +75,26 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvat
   const displayName = xHandle?.replace("@", "") || "Your Name";
 
   return (
-    <div className="border-b border-[#2f3336] hover:bg-[#080808] transition-colors duration-200">
+    <div className={cn(
+      "border-b border-[#2f3336] hover:bg-[#080808] transition-colors duration-200",
+      compact && "border border-[#2f3336] rounded-xl bg-[#000000]"
+    )}>
       {/* Main Post Container - Exact X Padding */}
-      <div className="px-4 py-3">
-        <div className="flex gap-3">
-          {/* (A) Profile Avatar - 40px circle */}
+      <div className={cn("px-4 py-3", compact && "px-3 py-2.5")}>
+        <div className={cn("flex gap-3", compact && "gap-2")}>
+          {/* (A) Profile Avatar - Smaller in compact mode */}
           <div className="flex-shrink-0">
             {xAvatar ? (
               <img
                 src={xAvatar}
                 alt={displayName}
-                className="w-10 h-10 rounded-full object-cover"
+                className={cn("rounded-full object-cover", compact ? "w-8 h-8" : "w-10 h-10")}
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white text-sm font-semibold">
+              <div className={cn(
+                "rounded-full bg-[#1d9bf0] flex items-center justify-center text-white font-semibold",
+                compact ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm"
+              )}>
                 {displayName[0]?.toUpperCase() || "X"}
               </div>
             )}
@@ -96,18 +103,27 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvat
           {/* Right Column - Header + Content */}
           <div className="flex-1 min-w-0">
             {/* (A) Header Section */}
-            <div className="flex items-start justify-between mb-1">
+            <div className={cn("flex items-start justify-between", compact ? "mb-0.5" : "mb-1")}>
               <div className="flex items-center gap-1 flex-wrap">
-                <span className="font-bold text-[15px] text-[#e7e9ea] hover:underline cursor-pointer leading-5">
+                <span className={cn(
+                  "font-bold text-[#e7e9ea] hover:underline cursor-pointer",
+                  compact ? "text-[13px] leading-4" : "text-[15px] leading-5"
+                )}>
                   {displayName}
                 </span>
-                <span className="text-[15px] text-[#71767b] leading-5">
+                <span className={cn(
+                  "text-[#71767b]",
+                  compact ? "text-[13px] leading-4" : "text-[15px] leading-5"
+                )}>
                   {xHandle || "@yourhandle"}
                 </span>
                 {relativeTime && (
                   <>
-                    <span className="text-[#71767b]">·</span>
-                    <span className="text-[15px] text-[#71767b] hover:underline cursor-pointer leading-5">
+                    <span className="text-[#71767b] text-[13px]">·</span>
+                    <span className={cn(
+                      "text-[#71767b] hover:underline cursor-pointer",
+                      compact ? "text-[13px] leading-4" : "text-[15px] leading-5"
+                    )}>
                       {relativeTime}
                     </span>
                   </>
@@ -120,10 +136,13 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvat
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-[34px] w-[34px] rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0] -mt-1 -mr-2"
+                    className={cn(
+                      "rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0]",
+                      compact ? "h-[28px] w-[28px] -mt-0.5 -mr-1" : "h-[34px] w-[34px] -mt-1 -mr-2"
+                    )}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <MoreHorizontal className="w-[18px] h-[18px]" />
+                    <MoreHorizontal className={cn(compact ? "w-[15px] h-[15px]" : "w-[18px] h-[18px]")} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-[#000000] border-[#2f3336] min-w-[300px]">
@@ -169,13 +188,16 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvat
 
             {/* (B) Main Content Section - Tweet Text */}
             {isEditing ? (
-              <div className="space-y-2 mb-3" onClick={(e) => e.stopPropagation()}>
+              <div className={cn("space-y-2", compact ? "mb-2" : "mb-3")} onClick={(e) => e.stopPropagation()}>
                 <Textarea
                   value={editedText}
                   onChange={(e) => setEditedText(e.target.value)}
                   onBlur={handleTextBlur}
                   onKeyDown={handleTextKeyDown}
-                  className="min-h-[100px] text-[15px] leading-5 bg-transparent border-[#2f3336] text-[#e7e9ea] resize-none focus-visible:ring-[#1d9bf0] p-0"
+                  className={cn(
+                    "bg-transparent border-[#2f3336] text-[#e7e9ea] resize-none focus-visible:ring-[#1d9bf0] p-0",
+                    compact ? "min-h-[60px] text-[13px] leading-[18px]" : "min-h-[100px] text-[15px] leading-5"
+                  )}
                   autoFocus
                   maxLength={maxChars}
                 />
@@ -186,58 +208,75 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvat
                   )}>
                     {charCount}/{maxChars}
                   </span>
-                  <span className="text-[#71767b]">Cmd+Enter to save</span>
+                  {!compact && <span className="text-[#71767b]">Cmd+Enter to save</span>}
                 </div>
               </div>
             ) : (
               <div 
-                className="text-[15px] text-[#e7e9ea] leading-5 whitespace-pre-wrap break-words mb-3 cursor-text"
+                className={cn(
+                  "text-[#e7e9ea] whitespace-pre-wrap break-words cursor-text",
+                  compact ? "text-[13px] leading-[18px] mb-2" : "text-[15px] leading-5 mb-3"
+                )}
                 onClick={handleTextClick}
-                style={{ lineHeight: '20px' }}
               >
                 {item.title}
               </div>
             )}
 
             {/* (D) Metadata Bar - Views count if published */}
-            {item.status === "published" && item.views && (
+            {item.status === "published" && item.views && !compact && (
               <div className="text-[13px] text-[#71767b] mb-3 leading-4">
                 {item.views.toLocaleString()} Views
               </div>
             )}
 
             {/* (E) Action Bar - Engagement Icons */}
-            <div className="flex items-center justify-between max-w-[425px] -ml-2">
+            <div className={cn(
+              "flex items-center justify-between",
+              compact ? "max-w-[300px] -ml-1.5" : "max-w-[425px] -ml-2"
+            )}>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-[34px] px-2 rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0] text-[#71767b] group"
+                className={cn(
+                  "rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0] text-[#71767b] group",
+                  compact ? "h-[28px] px-1.5" : "h-[34px] px-2"
+                )}
               >
-                <MessageCircle className="w-[18px] h-[18px]" />
+                <MessageCircle className={cn(compact ? "w-[14px] h-[14px]" : "w-[18px] h-[18px]")} />
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-[34px] px-2 rounded-full hover:bg-[#00ba7c1a] hover:text-[#00ba7c] text-[#71767b] group"
+                className={cn(
+                  "rounded-full hover:bg-[#00ba7c1a] hover:text-[#00ba7c] text-[#71767b] group",
+                  compact ? "h-[28px] px-1.5" : "h-[34px] px-2"
+                )}
               >
-                <Repeat2 className="w-[18px] h-[18px]" />
+                <Repeat2 className={cn(compact ? "w-[14px] h-[14px]" : "w-[18px] h-[18px]")} />
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-[34px] px-2 rounded-full hover:bg-[#f918801a] hover:text-[#f91880] text-[#71767b] group"
+                className={cn(
+                  "rounded-full hover:bg-[#f918801a] hover:text-[#f91880] text-[#71767b] group",
+                  compact ? "h-[28px] px-1.5" : "h-[34px] px-2"
+                )}
               >
-                <Heart className="w-[18px] h-[18px]" />
+                <Heart className={cn(compact ? "w-[14px] h-[14px]" : "w-[18px] h-[18px]")} />
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-[34px] px-2 rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0] text-[#71767b] group"
+                className={cn(
+                  "rounded-full hover:bg-[#1d9bf01a] hover:text-[#1d9bf0] text-[#71767b] group",
+                  compact ? "h-[28px] px-1.5" : "h-[34px] px-2"
+                )}
               >
-                <Share className="w-[18px] h-[18px]" />
+                <Share className={cn(compact ? "w-[14px] h-[14px]" : "w-[18px] h-[18px]")} />
               </Button>
             </div>
           </div>

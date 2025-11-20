@@ -368,7 +368,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
             <HeroSection items={filteredItems} isLoading={isLoading} />
           )}
           
-          {/* X Platform + Grid View = Tweet Wall */}
+          {/* Tweet Wall - only show when X + Grid */}
           {contentType === "x" && viewMode === "grid" ? (
             <TweetWall 
               items={filteredItems}
@@ -387,8 +387,6 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onStatusChange={handleStatusChange}
               youtubeAvatar={settings.youtubeAvatar}
               youtubeHandle={settings.youtubeHandle}
-              xAvatar={settings.xAvatar}
-              xHandle={settings.xHandle}
             />
           ) : viewMode === "board" ? (
             <BoardView 

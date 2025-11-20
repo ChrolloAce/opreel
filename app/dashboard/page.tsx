@@ -73,25 +73,27 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const { settings } = useUserSettings(user?.uid);
 
   // Load content and AI settings from Firebase
+  const loadContent = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const { fetchUserContent, getAISettings } = await import("@/lib/firebase-helpers");
+      const [items, settings] = await Promise.all([
+        fetchUserContent(user.uid),
+        getAISettings(user.uid)
+      ]);
+      setContentItems(items);
+      setAiSettings(settings);
+      console.log(`Loaded ${items.length} content items from Firebase`);
+    } catch (error) {
+      console.error("Error loading content:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user?.uid) return;
-
-    const loadContent = async () => {
-      try {
-        const { fetchUserContent, getAISettings } = await import("@/lib/firebase-helpers");
-        const [items, settings] = await Promise.all([
-          fetchUserContent(user.uid),
-          getAISettings(user.uid)
-        ]);
-        setContentItems(items);
-        setAiSettings(settings);
-      } catch (error) {
-        console.error("Error loading content:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadContent();
   }, [user?.uid]);
 
@@ -231,13 +233,20 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     if (!confirmDelete) return;
 
     try {
+      console.log("Starting deletion for item:", id);
+      
       // Delete from Firebase FIRST (not optimistic)
       const { deleteContentItem } = await import("@/lib/firebase-helpers");
       await deleteContentItem(user.uid, id);
       
-      // Only remove from UI after successful deletion
-      setContentItems((prev) => prev.filter((item) => item.id !== id));
-      console.log("Content deleted successfully from Firebase and UI");
+      console.log("Firebase deletion completed, refreshing data from Firebase");
+      
+      // Reload content from Firebase to ensure consistency
+      const { fetchUserContent } = await import("@/lib/firebase-helpers");
+      const updatedItems = await fetchUserContent(user.uid);
+      setContentItems(updatedItems);
+      
+      console.log(`Deletion complete. New item count: ${updatedItems.length}`);
     } catch (error: any) {
       console.error("Error deleting item from database:", error);
       alert(`Failed to delete item: ${error.message || 'Unknown error'}. Please try again.`);

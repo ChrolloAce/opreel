@@ -48,7 +48,47 @@ export async function POST(request: NextRequest) {
       ? `\n\nDETAILED INSTRUCTIONS (Follow these EXACTLY):\n${userContext.detailedInstructions}`
       : '';
 
-    const prompt = `You are an expert content strategist creating ${contentType} for a successful entrepreneur.
+    let prompt = "";
+    
+    if (platform === "x") {
+      // X/Twitter specific prompt for full tweets
+      prompt = `You are an expert X/Twitter content creator crafting viral tweets for a successful entrepreneur.
+
+ABOUT THE CREATOR:
+${userContext.aboutYou || "An ambitious entrepreneur building and scaling digital products."}
+
+STYLE GUIDELINES:
+• Tone: ${userContext.tone || "Confident, transparent, results-driven"}
+• Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
+• Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${categoryInstruction}${styleExamplesText}
+
+TWEET WRITING RULES:
+1. Write COMPLETE, STANDALONE tweets (not just titles or hooks)
+2. Each tweet should be 150-280 characters
+3. Use line breaks for readability when appropriate
+4. Include numbers, metrics, and results when relevant
+5. Use emojis sparingly (max 1-2 per tweet)
+6. Capitalize: App, AI, Apps, SaaS, MRR, ARR, Users
+7. Be conversational and authentic
+8. End with a hook, question, or call to action when appropriate
+9. Match the style examples above - study their structure and voice
+
+TWEET TYPES TO GENERATE:
+- Personal wins and results
+- Quick tips and insights
+- Bold statements and hot takes
+- Behind-the-scenes updates
+- Engaging questions
+- Lessons learned
+- Progress updates
+
+Generate exactly ${quantity} complete X/Twitter posts. Each should be engaging, authentic, and ready to post.
+
+Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["tweet 1", "tweet 2", ...].`;
+    } else {
+      // YouTube titles prompt
+      prompt = `You are an expert content strategist creating ${contentType} for a successful entrepreneur.
 
 ABOUT THE CREATOR:
 ${userContext.aboutYou || "An ambitious entrepreneur building and scaling digital products."}
@@ -72,11 +112,10 @@ CRITICAL FORMATTING RULES:
 5. Capitalize key terms: App, AI, Apps, SaaS, MRR, ARR, Users
 6. Be results-focused with dollar amounts when possible
 
-${platform === "youtube" 
-  ? "Generate exactly ${quantity} YouTube video titles that are compelling, click-worthy, and match the style examples above EXACTLY." 
-  : "Generate exactly ${quantity} X/Twitter posts that are engaging and under 280 characters."}
+Generate exactly ${quantity} YouTube video titles that are compelling, click-worthy, and match the style examples above EXACTLY.
 
 Return ONLY a valid JSON array of strings. No markdown, no explanation, just ["title 1", "title 2", ...].`;
+    }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",

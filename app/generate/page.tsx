@@ -367,30 +367,47 @@ function AuthenticatedGenerate({ user, onSignOut }: { user: any; onSignOut: () =
                     </div>
                   ) : (
                     <>
-                      <div className="space-y-2 max-h-[500px] overflow-y-auto mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto mb-4 pr-2">
                         {generatedIdeas.map((idea, index) => (
                           <div
                             key={index}
                             className={cn(
-                              "flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                              "relative p-4 rounded-lg border transition-all cursor-pointer group",
                               selectedIdeas.has(index)
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
+                                ? "border-primary bg-primary/5 shadow-md"
+                                : "border-border hover:border-primary/50 hover:shadow-sm"
                             )}
                             onClick={() => toggleIdeaSelection(index)}
                           >
-                            <div className={cn(
-                              "mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                              selectedIdeas.has(index)
-                                ? "border-primary bg-primary"
-                                : "border-border"
-                            )}>
-                              {selectedIdeas.has(index) && (
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              )}
+                            {/* Checkbox */}
+                            <div className="absolute top-2 right-2">
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                                selectedIdeas.has(index)
+                                  ? "border-primary bg-primary"
+                                  : "border-border group-hover:border-primary/50"
+                              )}>
+                                {selectedIdeas.has(index) && (
+                                  <Check className="w-3 h-3 text-primary-foreground" />
+                                )}
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <p className="text-sm leading-relaxed">{idea}</p>
+
+                            {/* Content */}
+                            <div className="pr-6">
+                              <p className={cn(
+                                "text-sm leading-relaxed",
+                                platform === "x" ? "whitespace-pre-wrap" : ""
+                              )}>
+                                {idea}
+                              </p>
+                            </div>
+
+                            {/* Index badge */}
+                            <div className="absolute bottom-2 right-2">
+                              <Badge variant="secondary" className="text-xs">
+                                #{index + 1}
+                              </Badge>
                             </div>
                           </div>
                         ))}

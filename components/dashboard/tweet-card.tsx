@@ -19,9 +19,11 @@ interface TweetCardProps {
   onTitleUpdate: (id: string, newTitle: string) => void;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: ContentStatus) => void;
+  xAvatar?: string;
+  xHandle?: string;
 }
 
-export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange }: TweetCardProps) {
+export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange, xAvatar, xHandle }: TweetCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(item.title);
 
@@ -79,9 +81,17 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange }: Twe
       <div className="flex gap-3 p-4">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-            U
-          </div>
+          {xAvatar ? (
+            <img
+              src={xAvatar}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+              X
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -89,8 +99,10 @@ export function TweetCard({ item, onTitleUpdate, onDelete, onStatusChange }: Twe
           {/* Header */}
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1 text-[15px]">
-              <span className="font-bold text-[#e7e9ea] hover:underline">Your Name</span>
-              <span className="text-[#71767b]">@yourhandle</span>
+              <span className="font-bold text-[#e7e9ea] hover:underline">
+                {xHandle?.replace("@", "") || "Your Name"}
+              </span>
+              <span className="text-[#71767b]">{xHandle || "@yourhandle"}</span>
               {relativeTime && (
                 <>
                   <span className="text-[#71767b]">·</span>

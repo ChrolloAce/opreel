@@ -10,6 +10,8 @@ interface TweetWallProps {
   onTitleUpdate: (id: string, newTitle: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  xAvatar?: string;
+  xHandle?: string;
 }
 
 export function TweetWall({
@@ -17,6 +19,8 @@ export function TweetWall({
   onTitleUpdate,
   onDelete,
   onStatusChange,
+  xAvatar,
+  xHandle,
 }: TweetWallProps) {
   // Filter only X/Twitter items
   const tweets = items.filter(item => item.platform === "x");
@@ -46,6 +50,8 @@ export function TweetWall({
             onTitleUpdate={onTitleUpdate}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            xAvatar={xAvatar}
+            xHandle={xHandle}
           />
         ))}
       </div>

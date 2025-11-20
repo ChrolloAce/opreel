@@ -21,6 +21,8 @@ interface ContentCardProps {
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: ContentStatus) => void;
+  youtubeAvatar?: string;
+  youtubeHandle?: string;
 }
 
 const statusColors: Record<ContentStatus, string> = {
@@ -32,7 +34,7 @@ const statusColors: Record<ContentStatus, string> = {
   published: "bg-green-600 text-white",
 };
 
-export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange }: ContentCardProps) {
+export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange, youtubeAvatar, youtubeHandle }: ContentCardProps) {
   const statusColorClass = statusColors[item.status];
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(item.title);
@@ -161,20 +163,34 @@ export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, 
             </h3>
           )}
           
-          <div className="flex flex-col text-xs text-[#aaaaaa]">
-            <span>YouTube Channel</span>
-            {(item.views !== undefined || relativeTime) && (
-              <div className="flex items-center">
-                {item.views !== undefined && (
-                  <>
-                    <span>{item.views.toLocaleString()} views</span>
-                    {relativeTime && <span className="mx-1">•</span>}
-                  </>
-                )}
-                {relativeTime && <span>{relativeTime}</span>}
+          <div className="flex items-center gap-2 mb-1">
+            {youtubeAvatar ? (
+              <img
+                src={youtubeAvatar}
+                alt="Channel"
+                className="w-6 h-6 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-white text-[10px] font-bold">
+                YT
               </div>
             )}
+            <span className="text-xs text-[#aaaaaa]">
+              {youtubeHandle || "YouTube Channel"}
+            </span>
           </div>
+          
+          {(item.views !== undefined || relativeTime) && (
+            <div className="flex items-center text-xs text-[#aaaaaa]">
+              {item.views !== undefined && (
+                <>
+                  <span>{item.views.toLocaleString()} views</span>
+                  {relativeTime && <span className="mx-1">•</span>}
+                </>
+              )}
+              {relativeTime && <span>{relativeTime}</span>}
+            </div>
+          )}
         </div>
 
         {/* More Options */}

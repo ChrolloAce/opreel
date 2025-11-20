@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   Youtube,
   Twitter,
+  Settings,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,8 @@ export function Sidebar({
   onStatusChange,
   onSignOut,
 }: SidebarProps) {
+  const router = useRouter();
+  
   return (
     <div
       className={cn(
@@ -79,6 +83,12 @@ export function Sidebar({
                 label="Analytics"
                 isActive={false}
                 onClick={() => {}}
+              />
+              <SidebarItem
+                icon={<Settings className="w-4 h-4" />}
+                label="Settings"
+                isActive={false}
+                onClick={() => router.push("/settings")}
               />
             </div>
           </div>

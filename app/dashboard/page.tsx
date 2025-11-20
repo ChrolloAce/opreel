@@ -17,6 +17,7 @@ import { CalendarView } from "@/components/dashboard/calendar-view";
 import { QuickAddPanel } from "@/components/dashboard/quick-add-panel";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { useAuth } from "@/lib/auth-context";
+import { useUserSettings } from "@/lib/use-user-settings";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -65,6 +66,9 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [isSaving, setIsSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "board" | "calendar">("grid");
   const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
+  
+  // Load user settings
+  const { settings } = useUserSettings(user?.uid);
 
   // Load content from Firebase
   useEffect(() => {
@@ -363,6 +367,8 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onTitleUpdate={handleTitleUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              xAvatar={settings.xAvatar}
+              xHandle={settings.xHandle}
             />
           ) : viewMode === "grid" ? (
             <ContentGrid 
@@ -371,6 +377,8 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onThumbnailUpdate={handleThumbnailUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              youtubeAvatar={settings.youtubeAvatar}
+              youtubeHandle={settings.youtubeHandle}
             />
           ) : viewMode === "board" ? (
             <BoardView 

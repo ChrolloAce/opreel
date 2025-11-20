@@ -78,13 +78,29 @@ export async function deleteContentItem(
   userId: string,
   itemId: string
 ): Promise<void> {
+  if (!userId || !itemId) {
+    throw new Error("Missing userId or itemId for deletion");
+  }
+
   try {
     const docRef = doc(db, "users", userId, "content", itemId);
+    
+    // Verify document exists before deleting
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      console.warn(`Document ${itemId} does not exist, may have already been deleted`);
+      return; // Don't throw error if already deleted
+    }
+    
+    // Delete the document
     await deleteDoc(docRef);
-    console.log(`Successfully deleted content item: ${itemId}`);
-  } catch (error) {
+    console.log(`Successfully deleted content item: ${itemId} from Firebase`);
+    
+    // Wait a moment to ensure Firebase processes the deletion
+    await new Promise(resolve => setTimeout(resolve, 300));
+  } catch (error: any) {
     console.error(`Error deleting content item ${itemId}:`, error);
-    throw error;
+    throw new Error(`Failed to delete from Firebase: ${error.message}`);
   }
 }
 

@@ -218,20 +218,29 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     
     // Store the item in case we need to restore it
     const itemToDelete = contentItems.find((item) => item.id === id);
-    if (!itemToDelete) return;
+    if (!itemToDelete) {
+      console.error("Item not found for deletion:", id);
+      return;
+    }
 
-    // Optimistic delete - remove from UI immediately
-    setContentItems((prev) => prev.filter((item) => item.id !== id));
+    // Confirm deletion
+    const confirmDelete = window.confirm(
+      `Delete "${itemToDelete.title.substring(0, 50)}${itemToDelete.title.length > 50 ? '...' : ''}"?`
+    );
+    
+    if (!confirmDelete) return;
 
     try {
+      // Delete from Firebase FIRST (not optimistic)
       const { deleteContentItem } = await import("@/lib/firebase-helpers");
       await deleteContentItem(user.uid, id);
-      console.log("Content deleted successfully");
-    } catch (error) {
+      
+      // Only remove from UI after successful deletion
+      setContentItems((prev) => prev.filter((item) => item.id !== id));
+      console.log("Content deleted successfully from Firebase and UI");
+    } catch (error: any) {
       console.error("Error deleting item from database:", error);
-      // Restore the item on error
-      setContentItems((prev) => [...prev, itemToDelete]);
-      alert("Failed to delete item from database. Please try again.");
+      alert(`Failed to delete item: ${error.message || 'Unknown error'}. Please try again.`);
     }
   };
 

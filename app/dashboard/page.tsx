@@ -13,6 +13,7 @@ import { HeroSection } from "@/components/dashboard/hero-section";
 import { ContentGrid } from "@/components/dashboard/content-grid";
 import { BoardView } from "@/components/dashboard/board-view";
 import { TweetWall } from "@/components/dashboard/tweet-wall";
+import { CalendarView } from "@/components/dashboard/calendar-view";
 import { QuickAddPanel } from "@/components/dashboard/quick-add-panel";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { useAuth } from "@/lib/auth-context";
@@ -25,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Menu, LayoutGrid as GridIcon, Columns, Twitter } from "lucide-react";
+import { Menu, LayoutGrid as GridIcon, Columns, Calendar as CalendarIcon, Youtube, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -62,7 +63,8 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [isLoading, setIsLoading] = useState(true);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "board" | "tweets">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "board" | "calendar">("grid");
+  const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
 
   // Load content from Firebase
   useEffect(() => {
@@ -103,6 +105,12 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
   // Filtering Logic
   const filteredItems = contentItems.filter((item) => {
+    // Content type filter (YouTube/X/All)
+    const matchesContentType =
+      contentType === "all" ||
+      (contentType === "youtube" && item.platform === "youtube") ||
+      (contentType === "x" && item.platform === "x");
+    
     const matchesPlatform =
       platformFilter === "all" || item.platform === platformFilter;
     const matchesStatus =
@@ -111,7 +119,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
 
-    return matchesPlatform && matchesStatus && matchesSearch;
+    return matchesContentType && matchesPlatform && matchesStatus && matchesSearch;
   });
 
   const handleAddItems = async (newItems: ContentItem[]) => {
@@ -234,6 +242,24 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     }
   };
 
+  const handleDateUpdate = async (id: string, newDate: string) => {
+    if (!user?.uid) return;
+    
+    // Optimistic update
+    setContentItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, scheduledFor: newDate } : item
+      )
+    );
+
+    try {
+      const { updateContentItem } = await import("@/lib/firebase-helpers");
+      await updateContentItem(user.uid, id, { scheduledFor: newDate });
+    } catch (error) {
+      console.error("Error updating date:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Sidebar */}
@@ -287,9 +313,27 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
           onStatusChange={setStatusFilter}
         />
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center justify-between mb-6">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "board" | "tweets")}>
+        {/* Content Type & View Mode Switchers */}
+        <div className="flex items-center justify-between mb-6 gap-4">
+          {/* Content Type Toggle */}
+          <Tabs value={contentType} onValueChange={(v) => setContentType(v as "youtube" | "x" | "all")}>
+            <TabsList className="bg-card">
+              <TabsTrigger value="all" className="gap-2">
+                All
+              </TabsTrigger>
+              <TabsTrigger value="youtube" className="gap-2">
+                <Youtube className="w-4 h-4" />
+                YouTube
+              </TabsTrigger>
+              <TabsTrigger value="x" className="gap-2">
+                <Twitter className="w-4 h-4" />
+                X
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* View Mode Toggle */}
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "board" | "calendar")}>
             <TabsList className="bg-card">
               <TabsTrigger value="grid" className="gap-2">
                 <GridIcon className="w-4 h-4" />
@@ -299,9 +343,9 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
                 <Columns className="w-4 h-4" />
                 Board
               </TabsTrigger>
-              <TabsTrigger value="tweets" className="gap-2">
-                <Twitter className="w-4 h-4" />
-                Tweets
+              <TabsTrigger value="calendar" className="gap-2">
+                <CalendarIcon className="w-4 h-4" />
+                Calendar
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -309,11 +353,18 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
         {/* Content View */}
         <div className="w-full">
-          {viewMode !== "tweets" && (
+          {viewMode !== "calendar" && contentType !== "x" && (
             <HeroSection items={filteredItems} isLoading={isLoading} />
           )}
           
-          {viewMode === "grid" ? (
+          {contentType === "x" && viewMode !== "calendar" ? (
+            <TweetWall 
+              items={filteredItems}
+              onTitleUpdate={handleTitleUpdate}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          ) : viewMode === "grid" ? (
             <ContentGrid 
               items={filteredItems}
               onTitleUpdate={handleTitleUpdate}
@@ -330,9 +381,10 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onStatusChange={handleStatusChange}
             />
           ) : (
-            <TweetWall 
+            <CalendarView 
               items={filteredItems}
               onTitleUpdate={handleTitleUpdate}
+              onDateUpdate={handleDateUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />

@@ -13,7 +13,7 @@ import {
   Twitter,
   Settings,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ export function Sidebar({
   onSignOut,
 }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   
   return (
     <div
@@ -61,19 +62,19 @@ export function Sidebar({
               <SidebarItem
                 icon={<LayoutGrid className="w-4 h-4" />}
                 label="Dashboard"
-                isActive={true}
-                onClick={() => {}}
+                isActive={pathname === "/dashboard"}
+                onClick={() => router.push("/dashboard")}
               />
               <SidebarItem
                 icon={<Library className="w-4 h-4" />}
                 label="Content Library"
-                isActive={false}
+                isActive={pathname === "/content-library"}
                 onClick={() => router.push("/content-library")}
               />
               <SidebarItem
                 icon={<Settings className="w-4 h-4" />}
                 label="Settings"
-                isActive={false}
+                isActive={pathname === "/settings"}
                 onClick={() => router.push("/settings")}
               />
             </div>

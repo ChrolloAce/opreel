@@ -76,8 +76,14 @@ export async function deleteContentItem(
   userId: string,
   itemId: string
 ): Promise<void> {
-  const docRef = doc(db, "users", userId, "content", itemId);
-  await deleteDoc(docRef);
+  try {
+    const docRef = doc(db, "users", userId, "content", itemId);
+    await deleteDoc(docRef);
+    console.log(`Successfully deleted content item: ${itemId}`);
+  } catch (error) {
+    console.error(`Error deleting content item ${itemId}:`, error);
+    throw error;
+  }
 }
 
 export async function uploadThumbnail(

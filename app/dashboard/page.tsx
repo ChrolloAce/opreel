@@ -210,15 +210,22 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const handleDelete = async (id: string) => {
     if (!user?.uid) return;
     
-    // Optimistic delete
+    // Store the item in case we need to restore it
+    const itemToDelete = contentItems.find((item) => item.id === id);
+    if (!itemToDelete) return;
+
+    // Optimistic delete - remove from UI immediately
     setContentItems((prev) => prev.filter((item) => item.id !== id));
 
     try {
       const { deleteContentItem } = await import("@/lib/firebase-helpers");
       await deleteContentItem(user.uid, id);
+      console.log("Content deleted successfully");
     } catch (error) {
-      console.error("Error deleting item:", error);
-      alert("Failed to delete item. Please refresh.");
+      console.error("Error deleting item from database:", error);
+      // Restore the item on error
+      setContentItems((prev) => [...prev, itemToDelete]);
+      alert("Failed to delete item from database. Please try again.");
     }
   };
 

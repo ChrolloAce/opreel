@@ -8,7 +8,7 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { platform, quantity, category, userContext, styleExamples } = body;
+    const { platform, quantity, customPrompt, userContext, styleExamples } = body;
 
     if (!platform || !quantity) {
       return NextResponse.json(
@@ -24,18 +24,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build category instruction
-    let categoryInstruction = "";
-    if (category && category !== "mixed") {
-      const categoryMap: Record<string, string> = {
-        "case-study": "Focus on CASE STUDIES - real examples and success stories with specific numbers and timeframes (e.g., 'I Built This App in 14 Days… Now It Makes $30K/Month')",
-        "personal-results": "Focus on PERSONAL RESULTS - your achievements and milestones that inspire (e.g., 'How I Went From Broke To Retiring My Mom at 21')",
-        "step-by-step": "Focus on STEP-BY-STEP GUIDES - actionable tutorials and frameworks (e.g., 'The No BS Guide To Quit Your Job in 90 Days and Hit $10K/Month')",
-        "contrarian": "Focus on CONTRARIAN TAKES - bold statements and urgent opportunities (e.g., 'The Gold Rush Is Here: Build an AI App in 48 Hours and Quit Your Job')",
-        "tutorial": "Focus on TUTORIALS - how-to and instructional content (e.g., 'How To Go From 0 to 1,000 Users With Your App')",
-        "comparison": "Focus on COMPARISONS - before/after transformations and cloning success (e.g., 'I Cloned a $300M/Year App in 67 Minutes')"
-      };
-      categoryInstruction = `\n\nCATEGORY FOCUS:\n${categoryMap[category] || ""}`;
+    // Build custom prompt instruction
+    let customPromptInstruction = "";
+    if (customPrompt && customPrompt.trim()) {
+      customPromptInstruction = `\n\nCUSTOM INSTRUCTIONS (Follow these as primary guidance):\n${customPrompt.trim()}`;
     }
 
     // Build the prompt with style examples prominently featured
@@ -61,18 +53,19 @@ STYLE GUIDELINES:
 • Tone: ${userContext.tone || "Confident, transparent, results-driven"}
 • Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
 • Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
-• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${categoryInstruction}${styleExamplesText}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptInstruction}${styleExamplesText}
 
 TWEET WRITING RULES:
 1. Write COMPLETE, STANDALONE tweets (not just titles or hooks)
-2. Each tweet should be 150-280 characters
-3. Use line breaks for readability when appropriate
+2. Each tweet should be 100-280 characters (full tweet length)
+3. Use line breaks for readability when appropriate (2-3 line tweets work great)
 4. Include numbers, metrics, and results when relevant
-5. Use emojis sparingly (max 1-2 per tweet)
+5. Use emojis sparingly (max 1-2 per tweet, and only when natural)
 6. Capitalize: App, AI, Apps, SaaS, MRR, ARR, Users
-7. Be conversational and authentic
+7. Be conversational and authentic - write like you're talking to a friend
 8. End with a hook, question, or call to action when appropriate
-9. Match the style examples above - study their structure and voice
+9. Match the style examples above - study their structure, voice, and formatting
+10. Vary tweet types: stats, lessons, hot takes, questions, updates, stories
 
 TWEET TYPES TO GENERATE:
 - Personal wins and results
@@ -97,7 +90,7 @@ CREATOR'S VOICE & RULES:
 • Tone: ${userContext.tone || "Confident, transparent, results-driven"}
 • Target Audience: ${userContext.targetAudience || "Aspiring entrepreneurs and app builders"}
 • Content Pillars: ${userContext.contentPillars || "Building in public, growth strategies, monetization"}
-• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${categoryInstruction}
+• Topics to Avoid: ${userContext.topicsToAvoid || "None"}${detailedInstructionsText}${customPromptInstruction}
 
 ${styleExamplesText}
 

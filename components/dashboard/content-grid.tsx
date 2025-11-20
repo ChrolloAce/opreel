@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ContentItem } from "@/lib/content-data";
+import { ContentItem, ContentStatus } from "@/lib/content-data";
 import { ContentCard } from "@/components/dashboard/content-card";
 import { LayoutGrid } from "lucide-react";
 
@@ -10,9 +10,10 @@ interface ContentGridProps {
   onTitleUpdate: (id: string, newTitle: string) => void;
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: ContentStatus) => void;
 }
 
-export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete }: ContentGridProps) {
+export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange }: ContentGridProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -37,6 +38,7 @@ export function ContentGrid({ items, onTitleUpdate, onThumbnailUpdate, onDelete 
             onTitleUpdate={onTitleUpdate}
             onThumbnailUpdate={onThumbnailUpdate}
             onDelete={onDelete}
+            onStatusChange={onStatusChange}
           />
         ))}
       </div>

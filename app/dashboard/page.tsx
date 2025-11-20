@@ -11,10 +11,12 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { HeroSection } from "@/components/dashboard/hero-section";
 import { ContentGrid } from "@/components/dashboard/content-grid";
+import { BoardView } from "@/components/dashboard/board-view";
 import { QuickAddPanel } from "@/components/dashboard/quick-add-panel";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { useAuth } from "@/lib/auth-context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LayoutGrid as GridIcon, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -59,6 +61,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [isLoading, setIsLoading] = useState(true);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "board">("grid");
 
   // Load content from Firebase
   useEffect(() => {
@@ -163,13 +166,20 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const handleThumbnailUpdate = async (id: string, file: File) => {
     if (!user?.uid) return;
     
+    // Check if item exists
+    const itemExists = contentItems.find(item => item.id === id);
+    if (!itemExists) {
+      console.error("Item not found in state");
+      return;
+    }
+    
     try {
       const { uploadThumbnail, updateContentItem } = await import("@/lib/firebase-helpers");
       
       // Upload to Firebase Storage
       const downloadUrl = await uploadThumbnail(user.uid, file);
       
-      // Update Firestore
+      // Update Firestore (only if document exists)
       await updateContentItem(user.uid, id, { thumbnailUrl: downloadUrl });
       
       // Update local state
@@ -196,6 +206,30 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
     } catch (error) {
       console.error("Error deleting item:", error);
       alert("Failed to delete item. Please refresh.");
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: ContentStatus) => {
+    if (!user?.uid) return;
+    
+    // Optimistic update
+    setContentItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: newStatus } : item
+      )
+    );
+
+    try {
+      const { updateContentItem } = await import("@/lib/firebase-helpers");
+      await updateContentItem(user.uid, id, { status: newStatus });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      // Revert on error
+      setContentItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: item.status } : item
+        )
+      );
     }
   };
 
@@ -252,15 +286,43 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
           onStatusChange={setStatusFilter}
         />
 
-        {/* Full Width Grid - No Right Panel */}
+        {/* View Mode Switcher */}
+        <div className="flex items-center justify-between mb-6">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "board")}>
+            <TabsList className="bg-card">
+              <TabsTrigger value="grid" className="gap-2">
+                <GridIcon className="w-4 h-4" />
+                Grid View
+              </TabsTrigger>
+              <TabsTrigger value="board" className="gap-2">
+                <Columns className="w-4 h-4" />
+                Board View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* Content View */}
         <div className="w-full">
           <HeroSection items={filteredItems} isLoading={isLoading} />
-          <ContentGrid 
-            items={filteredItems}
-            onTitleUpdate={handleTitleUpdate}
-            onThumbnailUpdate={handleThumbnailUpdate}
-            onDelete={handleDelete}
-          />
+          
+          {viewMode === "grid" ? (
+            <ContentGrid 
+              items={filteredItems}
+              onTitleUpdate={handleTitleUpdate}
+              onThumbnailUpdate={handleThumbnailUpdate}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          ) : (
+            <BoardView 
+              items={filteredItems}
+              onTitleUpdate={handleTitleUpdate}
+              onThumbnailUpdate={handleThumbnailUpdate}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          )}
         </div>
 
         {/* Helper Text */}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { MoreVertical, Upload, Trash2 } from "lucide-react";
+import { MoreVertical, Upload, Trash2, CheckCircle2 } from "lucide-react";
 import { ContentItem, ContentStatus } from "@/lib/content-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ interface ContentCardProps {
   onTitleUpdate: (id: string, newTitle: string) => void;
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
+  onStatusChange?: (id: string, status: ContentStatus) => void;
 }
 
 const statusColors: Record<ContentStatus, string> = {
@@ -30,7 +32,7 @@ const statusColors: Record<ContentStatus, string> = {
   published: "bg-green-600 text-white",
 };
 
-export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete }: ContentCardProps) {
+export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete, onStatusChange }: ContentCardProps) {
   const statusColorClass = statusColors[item.status];
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(item.title);
@@ -183,6 +185,32 @@ export function ContentCard({ item, onTitleUpdate, onThumbnailUpdate, onDelete }
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {onStatusChange && (
+              <>
+                <DropdownMenuItem 
+                  onClick={() => onStatusChange(item.id, "idea")}
+                  disabled={item.status === "idea"}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2 text-gray-500" />
+                  Move to Drafts
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onStatusChange(item.id, "editing")}
+                  disabled={item.status === "editing"}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2 text-yellow-500" />
+                  Move to In Progress
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onStatusChange(item.id, "published")}
+                  disabled={item.status === "published"}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                  Move to Done
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem 
               onClick={() => onDelete(item.id)}
               className="text-red-500 focus:text-red-500 focus:bg-red-500/10"

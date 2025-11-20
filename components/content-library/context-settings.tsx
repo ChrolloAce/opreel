@@ -82,13 +82,12 @@ export function ContextSettings({ settings, onSave }: ContextSettingsProps) {
           <Textarea
             id="detailedInstructions"
             placeholder="Add specific instructions for AI generation... e.g., 'Always capitalize specific words like AI, App, MRR. Use numbers and timeframes. Be bold and results-focused.'"
-            className="min-h-[180px] resize-none"
+            className="min-h-[200px] resize-y"
             value={formData.detailedInstructions}
             onChange={(e) => handleChange("detailedInstructions", e.target.value)}
-            maxLength={maxChars}
           />
           <p className="text-xs text-muted-foreground">
-            Specific formatting rules, style preferences, and generation guidelines
+            Specific formatting rules, style preferences, and generation guidelines (no character limit)
           </p>
         </div>
 

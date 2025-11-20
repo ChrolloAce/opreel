@@ -21,5 +21,15 @@ export interface ContentItem {
   notes?: string;
 }
 
+export interface AISettings {
+  aboutYou: string;
+  tone: string;
+  targetAudience: string;
+  contentPillars: string;
+  topicsToAvoid: string;
+  selectedYouTubeIds: string[];
+  selectedXIds: string[];
+}
+
 export const initialContentItems: ContentItem[] = [];
 

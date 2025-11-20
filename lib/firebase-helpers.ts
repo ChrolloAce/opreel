@@ -5,13 +5,15 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  getDoc,
+  setDoc,
   query,
   orderBy,
   Timestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
-import { ContentItem } from "./content-data";
+import { ContentItem, AISettings } from "./content-data";
 
 export async function fetchUserContent(userId: string): Promise<ContentItem[]> {
   const contentRef = collection(db, "users", userId, "content");
@@ -94,5 +96,69 @@ export async function uploadThumbnail(
   const storageRef = ref(storage, `users/${userId}/thumbnails/${fileName}`);
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);
+}
+
+// AI Settings functions
+export async function saveAISettings(
+  userId: string,
+  settings: AISettings
+): Promise<void> {
+  try {
+    const docRef = doc(db, "users", userId, "aiSettings", "config");
+    await setDoc(docRef, settings);
+    console.log("AI settings saved successfully");
+  } catch (error) {
+    console.error("Error saving AI settings:", error);
+    throw error;
+  }
+}
+
+export async function getAISettings(userId: string): Promise<AISettings | null> {
+  try {
+    const docRef = doc(db, "users", userId, "aiSettings", "config");
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data() as AISettings;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching AI settings:", error);
+    throw error;
+  }
+}
+
+export async function getSelectedContentForAI(
+  userId: string,
+  contentIds: string[]
+): Promise<ContentItem[]> {
+  try {
+    if (contentIds.length === 0) return [];
+    
+    const contentRef = collection(db, "users", userId, "content");
+    const snapshot = await getDocs(contentRef);
+    
+    return snapshot.docs
+      .filter((doc) => contentIds.includes(doc.id))
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt:
+            data.createdAt instanceof Timestamp
+              ? data.createdAt.toDate().toISOString()
+              : data.createdAt,
+          scheduledFor: data.scheduledFor
+            ? data.scheduledFor instanceof Timestamp
+              ? data.scheduledFor.toDate().toISOString()
+              : data.scheduledFor
+            : undefined,
+        } as ContentItem;
+      });
+  } catch (error) {
+    console.error("Error fetching selected content:", error);
+    throw error;
+  }
 }
 

@@ -3,9 +3,7 @@
 import React from "react";
 import {
   LayoutGrid,
-  Calendar,
   Library,
-  BarChart3,
   Layers,
   LogOut,
   Lightbulb,
@@ -67,22 +65,10 @@ export function Sidebar({
                 onClick={() => {}}
               />
               <SidebarItem
-                icon={<Calendar className="w-4 h-4" />}
-                label="Calendar"
-                isActive={false}
-                onClick={() => {}}
-              />
-              <SidebarItem
                 icon={<Library className="w-4 h-4" />}
                 label="Content Library"
                 isActive={false}
-                onClick={() => {}}
-              />
-              <SidebarItem
-                icon={<BarChart3 className="w-4 h-4" />}
-                label="Analytics"
-                isActive={false}
-                onClick={() => {}}
+                onClick={() => router.push("/content-library")}
               />
               <SidebarItem
                 icon={<Settings className="w-4 h-4" />}

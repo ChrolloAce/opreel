@@ -23,6 +23,11 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
     }
     
+    // AI Settings - users can only access their own AI settings
+    match /users/{userId}/aiSettings/{settingId} {
+      allow read, write: if isOwner(userId);
+    }
+    
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;

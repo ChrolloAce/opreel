@@ -5,6 +5,7 @@ import {
   ContentItem,
   ContentStatus,
   Platform,
+  AISettings,
   initialContentItems,
 } from "@/lib/content-data";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -66,19 +67,24 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [isSaving, setIsSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "board" | "calendar">("grid");
   const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
+  const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
   
   // Load user settings
   const { settings } = useUserSettings(user?.uid);
 
-  // Load content from Firebase
+  // Load content and AI settings from Firebase
   useEffect(() => {
     if (!user?.uid) return;
 
     const loadContent = async () => {
       try {
-        const { fetchUserContent } = await import("@/lib/firebase-helpers");
-        const items = await fetchUserContent(user.uid);
+        const { fetchUserContent, getAISettings } = await import("@/lib/firebase-helpers");
+        const [items, settings] = await Promise.all([
+          fetchUserContent(user.uid),
+          getAISettings(user.uid)
+        ]);
         setContentItems(items);
+        setAiSettings(settings);
       } catch (error) {
         console.error("Error loading content:", error);
       } finally {
@@ -433,7 +439,11 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               <Skeleton className="h-8 w-8 rounded-full animate-spin" />
             </div>
           ) : (
-            <QuickAddPanel onAddItems={handleAddItems} />
+            <QuickAddPanel 
+              onAddItems={handleAddItems}
+              aiSettings={aiSettings}
+              userContent={contentItems}
+            />
           )}
         </DialogContent>
       </Dialog>

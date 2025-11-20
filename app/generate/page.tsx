@@ -367,49 +367,133 @@ function AuthenticatedGenerate({ user, onSignOut }: { user: any; onSignOut: () =
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto mb-4 pr-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto mb-4 pr-2">
                         {generatedIdeas.map((idea, index) => (
-                          <div
-                            key={index}
-                            className={cn(
-                              "relative p-4 rounded-lg border transition-all cursor-pointer group",
-                              selectedIdeas.has(index)
-                                ? "border-primary bg-primary/5 shadow-md"
-                                : "border-border hover:border-primary/50 hover:shadow-sm"
-                            )}
-                            onClick={() => toggleIdeaSelection(index)}
-                          >
-                            {/* Checkbox */}
-                            <div className="absolute top-2 right-2">
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                          platform === "youtube" ? (
+                            // YouTube Video Card Style
+                            <div
+                              key={index}
+                              className={cn(
+                                "relative rounded-lg overflow-hidden cursor-pointer group transition-all",
                                 selectedIdeas.has(index)
-                                  ? "border-primary bg-primary"
-                                  : "border-border group-hover:border-primary/50"
-                              )}>
-                                {selectedIdeas.has(index) && (
-                                  <Check className="w-3 h-3 text-primary-foreground" />
-                                )}
+                                  ? "ring-2 ring-primary shadow-lg"
+                                  : "hover:shadow-md"
+                              )}
+                              onClick={() => toggleIdeaSelection(index)}
+                            >
+                              {/* Thumbnail Area */}
+                              <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900">
+                                {/* Play icon overlay */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-16 h-16 rounded-full bg-black/60 flex items-center justify-center">
+                                    <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
+                                  </div>
+                                </div>
+
+                                {/* Checkbox */}
+                                <div className="absolute top-2 right-2 z-10">
+                                  <div className={cn(
+                                    "w-6 h-6 rounded border-2 flex items-center justify-center transition-all backdrop-blur-sm",
+                                    selectedIdeas.has(index)
+                                      ? "border-primary bg-primary"
+                                      : "border-white bg-black/40 group-hover:border-primary"
+                                  )}>
+                                    {selectedIdeas.has(index) && (
+                                      <Check className="w-4 h-4 text-white" />
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Index badge */}
+                                <div className="absolute bottom-2 right-2">
+                                  <Badge variant="secondary" className="bg-black/80 text-white border-0 text-xs">
+                                    #{index + 1}
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              {/* Video Info */}
+                              <div className="p-3 bg-card border-t border-border">
+                                <p className="text-sm font-medium leading-tight line-clamp-2">
+                                  {idea}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                                  <Youtube className="w-4 h-4 text-red-500" />
+                                  <span>YouTube Video</span>
+                                </div>
                               </div>
                             </div>
+                          ) : (
+                            // X/Twitter Card Style
+                            <div
+                              key={index}
+                              className={cn(
+                                "relative rounded-xl overflow-hidden cursor-pointer group transition-all bg-[#000000] border",
+                                selectedIdeas.has(index)
+                                  ? "border-primary ring-2 ring-primary/20 shadow-lg"
+                                  : "border-[#2f3336] hover:border-primary/50"
+                              )}
+                              onClick={() => toggleIdeaSelection(index)}
+                            >
+                              <div className="p-3">
+                                {/* Header */}
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white text-xs font-semibold">
+                                      X
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[13px] font-bold text-[#e7e9ea]">Your Name</span>
+                                      <span className="text-[13px] text-[#71767b]">@yourhandle</span>
+                                    </div>
+                                  </div>
 
-                            {/* Content */}
-                            <div className="pr-6">
-                              <p className={cn(
-                                "text-sm leading-relaxed",
-                                platform === "x" ? "whitespace-pre-wrap" : ""
-                              )}>
-                                {idea}
-                              </p>
-                            </div>
+                                  {/* Checkbox */}
+                                  <div className={cn(
+                                    "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                                    selectedIdeas.has(index)
+                                      ? "border-primary bg-primary"
+                                      : "border-[#2f3336] group-hover:border-primary"
+                                  )}>
+                                    {selectedIdeas.has(index) && (
+                                      <Check className="w-3 h-3 text-white" />
+                                    )}
+                                  </div>
+                                </div>
 
-                            {/* Index badge */}
-                            <div className="absolute bottom-2 right-2">
-                              <Badge variant="secondary" className="text-xs">
-                                #{index + 1}
-                              </Badge>
+                                {/* Tweet Content */}
+                                <p className="text-[13px] text-[#e7e9ea] leading-[18px] whitespace-pre-wrap mb-3 min-h-[60px]">
+                                  {idea}
+                                </p>
+
+                                {/* Engagement Icons */}
+                                <div className="flex items-center gap-4 text-[#71767b]">
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center">
+                                      💬
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center">
+                                      🔁
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center">
+                                      ❤️
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Index badge */}
+                                <div className="absolute top-2 left-2">
+                                  <Badge variant="secondary" className="bg-[#1d9bf0] text-white border-0 text-xs">
+                                    #{index + 1}
+                                  </Badge>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          )
                         ))}
                       </div>
 

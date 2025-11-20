@@ -93,7 +93,7 @@ function DroppableColumn({
   return (
     <div
       id={column.id}
-      className="flex-shrink-0 w-[340px] bg-card rounded-xl border border-border flex flex-col"
+      className="flex-shrink-0 w-[420px] bg-card rounded-xl border border-border flex flex-col"
     >
       {/* Column Header */}
       <div className="p-4 border-b border-border">

@@ -68,8 +68,9 @@ export function CalendarView({
     setEditTitle(event.resource.title);
   };
 
-  const handleEventDrop = ({ event, start }: { event: CalendarEvent; start: Date }) => {
-    onDateUpdate(event.resource.id, start.toISOString());
+  const handleSelectSlot = ({ start }: { start: Date; end: Date }) => {
+    // Handle creating new event or moving event to this date
+    console.log("Selected slot:", start);
   };
 
   const handleSaveEdit = () => {
@@ -115,9 +116,9 @@ export function CalendarView({
           endAccessor="end"
           style={{ height: "100%" }}
           onSelectEvent={handleSelectEvent}
-          onEventDrop={handleEventDrop}
+          onSelectSlot={handleSelectSlot}
           eventPropGetter={eventStyleGetter}
-          draggableAccessor={() => true}
+          selectable
           views={["month", "week", "day"]}
           defaultView="month"
         />

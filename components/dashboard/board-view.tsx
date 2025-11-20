@@ -3,6 +3,7 @@
 import React from "react";
 import { ContentItem, ContentStatus } from "@/lib/content-data";
 import { ContentCard } from "@/components/dashboard/content-card";
+import { TweetCard } from "@/components/dashboard/tweet-card";
 
 interface BoardViewProps {
   items: ContentItem[];
@@ -10,6 +11,10 @@ interface BoardViewProps {
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  youtubeAvatar?: string;
+  youtubeHandle?: string;
+  xAvatar?: string;
+  xHandle?: string;
 }
 
 type Column = {
@@ -29,6 +34,10 @@ export function BoardView({
   onThumbnailUpdate,
   onDelete,
   onStatusChange,
+  youtubeAvatar,
+  youtubeHandle,
+  xAvatar,
+  xHandle,
 }: BoardViewProps) {
   const getItemsByStatus = (status: ContentStatus) => {
     return items.filter((item) => item.status === status);
@@ -47,6 +56,10 @@ export function BoardView({
             onThumbnailUpdate={onThumbnailUpdate}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            youtubeAvatar={youtubeAvatar}
+            youtubeHandle={youtubeHandle}
+            xAvatar={xAvatar}
+            xHandle={xHandle}
           />
         );
       })}
@@ -61,6 +74,10 @@ function DroppableColumn({
   onThumbnailUpdate,
   onDelete,
   onStatusChange,
+  youtubeAvatar,
+  youtubeHandle,
+  xAvatar,
+  xHandle,
 }: {
   column: Column;
   items: ContentItem[];
@@ -68,6 +85,10 @@ function DroppableColumn({
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  youtubeAvatar?: string;
+  youtubeHandle?: string;
+  xAvatar?: string;
+  xHandle?: string;
 }) {
   return (
     <div
@@ -104,6 +125,10 @@ function DroppableColumn({
               onThumbnailUpdate={onThumbnailUpdate}
               onDelete={onDelete}
               onStatusChange={onStatusChange}
+              youtubeAvatar={youtubeAvatar}
+              youtubeHandle={youtubeHandle}
+              xAvatar={xAvatar}
+              xHandle={xHandle}
             />
           ))
         )}
@@ -118,22 +143,50 @@ function DraggableCard({
   onThumbnailUpdate,
   onDelete,
   onStatusChange,
+  youtubeAvatar,
+  youtubeHandle,
+  xAvatar,
+  xHandle,
 }: {
   item: ContentItem;
   onTitleUpdate: (id: string, newTitle: string) => void;
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  youtubeAvatar?: string;
+  youtubeHandle?: string;
+  xAvatar?: string;
+  xHandle?: string;
 }) {
   const { setNodeRef } = useDraggable({
     id: item.id,
     onStatusChange,
   });
 
+  // Render different card based on platform
+  if (item.platform === "x") {
+    return (
+      <div
+        ref={setNodeRef}
+        className="bg-[#000000] rounded-xl overflow-hidden cursor-grab active:cursor-grabbing border border-[#2f3336]"
+      >
+        <TweetCard
+          item={item}
+          onTitleUpdate={onTitleUpdate}
+          onDelete={onDelete}
+          onStatusChange={onStatusChange}
+          xAvatar={xAvatar}
+          xHandle={xHandle}
+        />
+      </div>
+    );
+  }
+
+  // Default: YouTube video card
   return (
     <div
       ref={setNodeRef}
-      className="bg-background rounded-lg p-2 cursor-grab active:cursor-grabbing"
+      className="bg-background rounded-lg overflow-hidden cursor-grab active:cursor-grabbing"
     >
       <ContentCard
         item={item}
@@ -141,6 +194,8 @@ function DraggableCard({
         onThumbnailUpdate={onThumbnailUpdate}
         onDelete={onDelete}
         onStatusChange={onStatusChange}
+        youtubeAvatar={youtubeAvatar}
+        youtubeHandle={youtubeHandle}
       />
     </div>
   );

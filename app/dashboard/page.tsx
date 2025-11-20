@@ -387,6 +387,10 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
               onThumbnailUpdate={handleThumbnailUpdate}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              youtubeAvatar={settings.youtubeAvatar}
+              youtubeHandle={settings.youtubeHandle}
+              xAvatar={settings.xAvatar}
+              xHandle={settings.xHandle}
             />
           ) : (
             <CalendarView 

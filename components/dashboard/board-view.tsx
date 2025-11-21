@@ -58,6 +58,7 @@ export function BoardView({
             onThumbnailUpdate={onThumbnailUpdate}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            onOpenScript={onOpenScript}
             youtubeAvatar={youtubeAvatar}
             youtubeHandle={youtubeHandle}
             xAvatar={xAvatar}
@@ -76,6 +77,7 @@ function DroppableColumn({
   onThumbnailUpdate,
   onDelete,
   onStatusChange,
+  onOpenScript,
   youtubeAvatar,
   youtubeHandle,
   xAvatar,
@@ -87,6 +89,7 @@ function DroppableColumn({
   onThumbnailUpdate: (id: string, file: File) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ContentStatus) => void;
+  onOpenScript?: (id: string) => void;
   youtubeAvatar?: string;
   youtubeHandle?: string;
   xAvatar?: string;

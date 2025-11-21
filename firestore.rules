@@ -12,18 +12,33 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Users collection - each user can only read/write their own data
+    // Helper function to check if user is a team member
+    function isTeamMember(userId) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(userId)) &&
+             request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.teamMembers;
+    }
+    
+    // Helper function to check if user has access (owner or team member)
+    function hasAccess(userId) {
+      return isOwner(userId) || isTeamMember(userId);
+    }
+    
+    // Users collection
     match /users/{userId} {
-      allow read, write, create: if isOwner(userId);
+      // Anyone can read user profiles (for team member lookup)
+      allow read: if isAuthenticated();
+      // Only owners can write their own profile
+      allow write, create: if isOwner(userId);
       
-      // Content items - users can only access their own content
+      // Content items - owner and team members can access
       match /content/{contentId} {
-        allow read, write, delete, create: if isOwner(userId);
+        allow read, write, delete, create: if hasAccess(userId);
       }
       
-      // AI Settings - users can only access their own AI settings
+      // AI Settings - owner and team members can access
       match /aiSettings/{settingId} {
-        allow read, write, create: if isOwner(userId);
+        allow read, write, create: if hasAccess(userId);
       }
     }
     

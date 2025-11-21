@@ -54,5 +54,19 @@ export interface AISettings {
   selectedXIds: string[];
 }
 
+export interface TeamMember {
+  email: string;
+  addedAt: string;
+  addedBy: string;
+}
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName?: string;
+  photoURL?: string;
+  teamMembers: string[]; // Array of user IDs who have access to this user's content
+}
+
 export const initialContentItems: ContentItem[] = [];
 

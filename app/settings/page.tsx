@@ -4,16 +4,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { LoginScreen } from "@/components/auth/login-screen";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Youtube, Twitter, Upload, Loader2 } from "lucide-react";
-import { Platform, ContentStatus } from "@/lib/content-data";
+import { Badge } from "@/components/ui/badge";
+import { Youtube, Twitter, Upload, Loader2, Users, Mail, X as XIcon } from "lucide-react";
+import { Platform, ContentStatus, UserProfile } from "@/lib/content-data";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { addTeamMember, getTeamMemberDetails, removeTeamMember, initializeUserProfile } from "@/lib/team-helpers";
 
 interface UserSettings {
   youtubeHandle: string;
@@ -56,6 +58,12 @@ function AuthenticatedSettings({ user, onSignOut }: { user: any; onSignOut: () =
   const [uploadingX, setUploadingX] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
   const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
+  
+  // Team management state
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<UserProfile[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState(true);
 
   const ytFileInputRef = useRef<HTMLInputElement>(null);
   const xFileInputRef = useRef<HTMLInputElement>(null);
@@ -63,6 +71,9 @@ function AuthenticatedSettings({ user, onSignOut }: { user: any; onSignOut: () =
   useEffect(() => {
     if (user?.uid) {
       loadSettings();
+      loadTeamMembers();
+      // Initialize user profile if it doesn't exist
+      initializeUserProfile(user.uid, user.email, user.displayName, user.photoURL).catch(console.error);
     }
   }, [user]);
 
@@ -81,6 +92,65 @@ function AuthenticatedSettings({ user, onSignOut }: { user: any; onSignOut: () =
       console.error("Error loading settings:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTeamMembers = async () => {
+    if (!user?.uid) return;
+
+    try {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const memberIds = data.teamMembers || [];
+        
+        if (memberIds.length > 0) {
+          const members = await getTeamMemberDetails(memberIds);
+          setTeamMembers(members);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading team members:", error);
+    } finally {
+      setLoadingTeam(false);
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!newMemberEmail.trim() || !user?.uid) return;
+
+    setAddingMember(true);
+    try {
+      const result = await addTeamMember(user.uid, newMemberEmail.trim());
+      
+      if (result.success) {
+        setNewMemberEmail("");
+        await loadTeamMembers(); // Reload team list
+        alert("Team member added successfully!");
+      } else {
+        alert(result.error || "Failed to add team member");
+      }
+    } catch (error: any) {
+      console.error("Error adding team member:", error);
+      alert(error.message || "Failed to add team member");
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!user?.uid) return;
+    
+    if (!window.confirm("Remove this team member's access?")) return;
+
+    try {
+      await removeTeamMember(user.uid, memberId);
+      await loadTeamMembers(); // Reload team list
+    } catch (error) {
+      console.error("Error removing team member:", error);
+      alert("Failed to remove team member");
     }
   };
 
@@ -310,6 +380,112 @@ function AuthenticatedSettings({ user, onSignOut }: { user: any; onSignOut: () =
                 />
               </div>
             </CardContent>
+            </Card>
+
+            {/* Team Management */}
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Users className="w-5 h-5 text-primary" />
+                  Team Collaboration
+                </CardTitle>
+                <CardDescription>
+                  Invite team members to access your content. They'll be able to view and edit everything.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Add Member */}
+                <div className="space-y-2">
+                  <Label htmlFor="member-email">Invite by Email</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="member-email"
+                      type="email"
+                      placeholder="teammate@example.com"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleAddMember();
+                        }
+                      }}
+                      className="bg-background flex-1"
+                    />
+                    <Button
+                      onClick={handleAddMember}
+                      disabled={addingMember || !newMemberEmail.trim()}
+                      className="gap-2"
+                    >
+                      {addingMember ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Mail className="w-4 h-4" />
+                      )}
+                      Invite
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    They must have an account first. Once invited, they can switch to your workspace from their dashboard.
+                  </p>
+                </div>
+
+                {/* Team Members List */}
+                {loadingTeam ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ) : teamMembers.length > 0 ? (
+                  <div className="space-y-2">
+                    <Label>Team Members ({teamMembers.length})</Label>
+                    <div className="space-y-2">
+                      {teamMembers.map((member) => (
+                        <div
+                          key={member.uid}
+                          className="flex items-center justify-between p-3 rounded-lg border border-border bg-background"
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {member.photoURL ? (
+                              <img
+                                src={member.photoURL}
+                                alt={member.displayName || member.email}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                                {(member.displayName || member.email).substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">
+                                {member.displayName || "Team Member"}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {member.email}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="flex-shrink-0">
+                              Full Access
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveMember(member.uid)}
+                            className="ml-2 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <XIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    No team members yet. Invite someone to collaborate!
+                  </div>
+                )}
+              </CardContent>
             </Card>
 
             {/* Save Button */}

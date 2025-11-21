@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Platform, ContentStatus } from "@/lib/content-data";
+import { WorkspaceSwitcher } from "@/components/team/workspace-switcher";
 
 interface SidebarProps {
   className?: string;
@@ -27,6 +28,9 @@ interface SidebarProps {
   onPlatformChange: (platform: Platform | "all") => void;
   onStatusChange: (status: ContentStatus | "all") => void;
   onSignOut: () => void;
+  currentUserId?: string;
+  activeWorkspaceId?: string;
+  onWorkspaceChange?: (workspaceId: string) => void;
 }
 
 export function Sidebar({
@@ -36,6 +40,9 @@ export function Sidebar({
   onPlatformChange,
   onStatusChange,
   onSignOut,
+  currentUserId,
+  activeWorkspaceId,
+  onWorkspaceChange,
 }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -54,6 +61,20 @@ export function Sidebar({
       </div>
 
       <ScrollArea className="flex-1 px-4">
+        {/* Workspace Switcher */}
+        {currentUserId && activeWorkspaceId && onWorkspaceChange && (
+          <div className="mt-4 mb-4">
+            <div className="mb-2 px-2 text-xs font-semibold text-muted-foreground tracking-wider uppercase">
+              Workspace
+            </div>
+            <WorkspaceSwitcher
+              currentUserId={currentUserId}
+              activeWorkspaceId={activeWorkspaceId}
+              onWorkspaceChange={onWorkspaceChange}
+            />
+          </div>
+        )}
+        
         <div className="space-y-6">
           <div>
             <h2 className="mb-2 px-2 text-xs font-semibold text-muted-foreground tracking-wider uppercase">

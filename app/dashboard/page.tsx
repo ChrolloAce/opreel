@@ -70,23 +70,25 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
   const [scriptEditorItem, setScriptEditorItem] = useState<ContentItem | null>(null);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>(user?.uid);
   
   // Load user settings
-  const { settings } = useUserSettings(user?.uid);
+  const { settings } = useUserSettings(activeWorkspaceId);
 
   // Load content and AI settings from Firebase
   const loadContent = async () => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
+    setIsLoading(true);
     try {
       const { fetchUserContent, getAISettings } = await import("@/lib/firebase-helpers");
       const [items, settings] = await Promise.all([
-        fetchUserContent(user.uid),
-        getAISettings(user.uid)
+        fetchUserContent(activeWorkspaceId),
+        getAISettings(activeWorkspaceId)
       ]);
       setContentItems(items);
       setAiSettings(settings);
-      console.log(`Loaded ${items.length} content items from Firebase`);
+      console.log(`Loaded ${items.length} content items from workspace: ${activeWorkspaceId}`);
     } catch (error) {
       console.error("Error loading content:", error);
     } finally {
@@ -95,9 +97,14 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     loadContent();
-  }, [user?.uid]);
+  }, [activeWorkspaceId]);
+  
+  const handleWorkspaceChange = (newWorkspaceId: string) => {
+    setActiveWorkspaceId(newWorkspaceId);
+    // Content will reload automatically via useEffect
+  };
 
   // Spacebar handler
   useEffect(() => {
@@ -137,7 +144,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   });
 
   const handleAddItems = async (newItems: ContentItem[]) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     setIsSaving(true);
     try {
@@ -146,7 +153,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
       // Add items to Firebase and get their IDs
       const addedItems = await Promise.all(
         newItems.map(async (item) => {
-          const id = await addContentItem(user.uid, item);
+          const id = await addContentItem(activeWorkspaceId, item);
           return { ...item, id };
         })
       );
@@ -163,7 +170,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleTitleUpdate = async (id: string, newTitle: string) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     // Optimistic update
     setContentItems((prev) =>
@@ -174,7 +181,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
     try {
       const { updateContentItem } = await import("@/lib/firebase-helpers");
-      await updateContentItem(user.uid, id, { title: newTitle });
+      await updateContentItem(activeWorkspaceId, id, { title: newTitle });
     } catch (error) {
       console.error("Error updating title:", error);
       // Revert on error
@@ -187,7 +194,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleThumbnailUpdate = async (id: string, file: File) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     // Check if item exists
     const itemExists = contentItems.find(item => item.id === id);
@@ -200,10 +207,10 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
       const { uploadThumbnail, updateContentItem } = await import("@/lib/firebase-helpers");
       
       // Upload to Firebase Storage
-      const downloadUrl = await uploadThumbnail(user.uid, file);
+      const downloadUrl = await uploadThumbnail(activeWorkspaceId, file);
       
       // Update Firestore (only if document exists)
-      await updateContentItem(user.uid, id, { thumbnailUrl: downloadUrl });
+      await updateContentItem(activeWorkspaceId, id, { thumbnailUrl: downloadUrl });
       
       // Update local state
       setContentItems((prev) =>
@@ -218,7 +225,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleDelete = async (id: string) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     // Store the item in case we need to restore it
     const itemToDelete = contentItems.find((item) => item.id === id);
@@ -239,13 +246,13 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
       
       // Delete from Firebase FIRST (not optimistic)
       const { deleteContentItem } = await import("@/lib/firebase-helpers");
-      await deleteContentItem(user.uid, id);
+      await deleteContentItem(activeWorkspaceId, id);
       
       console.log("Firebase deletion completed, refreshing data from Firebase");
       
       // Reload content from Firebase to ensure consistency
       const { fetchUserContent } = await import("@/lib/firebase-helpers");
-      const updatedItems = await fetchUserContent(user.uid);
+      const updatedItems = await fetchUserContent(activeWorkspaceId);
       setContentItems(updatedItems);
       
       console.log(`Deletion complete. New item count: ${updatedItems.length}`);
@@ -256,7 +263,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleStatusChange = async (id: string, newStatus: ContentStatus) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     // Optimistic update
     setContentItems((prev) =>
@@ -267,7 +274,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
     try {
       const { updateContentItem } = await import("@/lib/firebase-helpers");
-      await updateContentItem(user.uid, id, { status: newStatus });
+      await updateContentItem(activeWorkspaceId, id, { status: newStatus });
     } catch (error) {
       console.error("Error updating status:", error);
       // Revert on error
@@ -280,7 +287,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleDateUpdate = async (id: string, newDate: string) => {
-    if (!user?.uid) return;
+    if (!activeWorkspaceId) return;
     
     // Optimistic update
     setContentItems((prev) =>
@@ -291,7 +298,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
     try {
       const { updateContentItem } = await import("@/lib/firebase-helpers");
-      await updateContentItem(user.uid, id, { scheduledFor: newDate });
+      await updateContentItem(activeWorkspaceId, id, { scheduledFor: newDate });
     } catch (error) {
       console.error("Error updating date:", error);
     }
@@ -305,7 +312,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   };
 
   const handleScriptUpdate = async (updates: Partial<ContentItem>) => {
-    if (!user?.uid || !scriptEditorItem) return;
+    if (!activeWorkspaceId || !scriptEditorItem) return;
     
     // Optimistic update
     setContentItems((prev) =>
@@ -319,7 +326,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
     try {
       const { updateContentItem } = await import("@/lib/firebase-helpers");
-      await updateContentItem(user.uid, scriptEditorItem.id, updates);
+      await updateContentItem(activeWorkspaceId, scriptEditorItem.id, updates);
     } catch (error) {
       console.error("Error updating script:", error);
     }
@@ -334,6 +341,9 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
         onPlatformChange={setPlatformFilter}
         onStatusChange={setStatusFilter}
         onSignOut={onSignOut}
+        currentUserId={user?.uid}
+        activeWorkspaceId={activeWorkspaceId}
+        onWorkspaceChange={handleWorkspaceChange}
       />
 
       {/* Main Content Area */}
@@ -364,6 +374,9 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
                   setStatusFilter(s);
                 }}
                 onSignOut={onSignOut}
+                currentUserId={user?.uid}
+                activeWorkspaceId={activeWorkspaceId}
+                onWorkspaceChange={handleWorkspaceChange}
               />
             </SheetContent>
           </Sheet>

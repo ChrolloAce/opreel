@@ -128,15 +128,19 @@ export async function removeTeamMember(
  */
 export async function getAccessibleWorkspaces(userId: string): Promise<UserProfile[]> {
   try {
+    console.log('Fetching accessible workspaces for user:', userId);
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("teamMembers", "array-contains", userId));
     const querySnapshot = await getDocs(q);
     
     const workspaces: UserProfile[] = [];
     querySnapshot.forEach((doc) => {
-      workspaces.push(doc.data() as UserProfile);
+      const data = { ...doc.data(), uid: doc.id } as UserProfile;
+      workspaces.push(data);
+      console.log('Found accessible workspace:', data.email || data.uid);
     });
     
+    console.log(`Total accessible workspaces: ${workspaces.length}`);
     return workspaces;
   } catch (error) {
     console.error("Error fetching accessible workspaces:", error);

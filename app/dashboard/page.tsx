@@ -70,10 +70,25 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   const [contentType, setContentType] = useState<"youtube" | "x" | "all">("all");
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
   const [scriptEditorItem, setScriptEditorItem] = useState<ContentItem | null>(null);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>(user?.uid);
   
-  // Load user settings
+  // Initialize workspace from localStorage or default to user's own workspace
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('activeWorkspaceId');
+      return saved || user?.uid || '';
+    }
+    return user?.uid || '';
+  });
+  
+  // Load user settings for the active workspace
   const { settings } = useUserSettings(activeWorkspaceId);
+  
+  // Sync activeWorkspaceId with user.uid on mount if not set
+  useEffect(() => {
+    if (user?.uid && !activeWorkspaceId) {
+      setActiveWorkspaceId(user.uid);
+    }
+  }, [user?.uid, activeWorkspaceId]);
 
   // Load content and AI settings from Firebase
   const loadContent = async () => {
@@ -98,11 +113,17 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
   useEffect(() => {
     if (!activeWorkspaceId) return;
+    console.log('Loading content for workspace:', activeWorkspaceId);
     loadContent();
   }, [activeWorkspaceId]);
   
   const handleWorkspaceChange = (newWorkspaceId: string) => {
+    console.log('Switching workspace to:', newWorkspaceId);
     setActiveWorkspaceId(newWorkspaceId);
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeWorkspaceId', newWorkspaceId);
+    }
     // Content will reload automatically via useEffect
   };
 

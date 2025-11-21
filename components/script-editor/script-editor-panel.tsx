@@ -49,6 +49,7 @@ export function ScriptEditorPanel({ item, onClose, onUpdate }: ScriptEditorPanel
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [editorKey, setEditorKey] = useState(0); // Force re-render when content changes
   
   // AI floating menu state
   const [selectedText, setSelectedText] = useState("");
@@ -121,14 +122,29 @@ export function ScriptEditorPanel({ item, onClose, onUpdate }: ScriptEditorPanel
   const handleReplaceText = (newText: string) => {
     // Replace the selected text in the active section
     const section = sections[activeSection];
-    const content = section.content;
-    // For now, just append the new text (Tiptap integration would handle proper replacement)
-    handleSectionUpdate(activeSection, content + "\n\n" + newText);
+    let content = section.content;
+    
+    // If we have selected text, try to replace it
+    if (selectedText && content.includes(selectedText)) {
+      content = content.replace(selectedText, newText);
+    } else {
+      // If no selection or can't find it, append
+      content = content + (content ? "\n\n" : "") + `<p>${newText}</p>`;
+    }
+    
+    handleSectionUpdate(activeSection, content);
+    setEditorKey(prev => prev + 1); // Force editor re-render
+    setMenuPosition(null);
+    setSelectedText("");
   };
 
   const handleInsertText = (newText: string) => {
     const section = sections[activeSection];
-    handleSectionUpdate(activeSection, section.content + "\n\n" + newText);
+    const content = section.content + (section.content ? "\n\n" : "") + `<p>${newText}</p>`;
+    handleSectionUpdate(activeSection, content);
+    setEditorKey(prev => prev + 1); // Force editor re-render
+    setMenuPosition(null);
+    setSelectedText("");
   };
 
   const getTimeSinceLastSave = () => {
@@ -278,6 +294,7 @@ export function ScriptEditorPanel({ item, onClose, onUpdate }: ScriptEditorPanel
               {/* Rich Text Editor */}
               <div className="bg-card rounded-2xl border border-border shadow-sm">
                 <RichTextEditor
+                  key={`editor-${activeSection}-${editorKey}`}
                   content={sections[activeSection].content}
                   onChange={(content) => handleSectionUpdate(activeSection, content)}
                   placeholder={SECTION_TEMPLATES[activeSection].placeholder}
@@ -296,8 +313,9 @@ export function ScriptEditorPanel({ item, onClose, onUpdate }: ScriptEditorPanel
             onGenerate={(content, sectionType) => {
               const sectionIndex = sections.findIndex(s => s.type === sectionType);
               if (sectionIndex >= 0) {
-                handleSectionUpdate(sectionIndex, content);
+                handleSectionUpdate(sectionIndex, `<p>${content}</p>`);
                 setActiveSection(sectionIndex);
+                setEditorKey(prev => prev + 1); // Force editor re-render
               }
             }}
           />

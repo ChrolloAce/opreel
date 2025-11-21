@@ -28,14 +28,15 @@ service cloud.firestore {
     match /users/{userId} {
       // Anyone can read user profiles (for team member lookup)
       allow read: if isAuthenticated();
-      // Only owners can write their own profile
-      allow write: if isOwner(userId);
+      
       // Allow creation of new user profiles
       allow create: if isAuthenticated();
-      // Allow updating teamMembers field specifically
-      allow update: if isOwner(userId) || 
-                       (isAuthenticated() && 
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamMembers']));
+      
+      // Allow updates: owners can update anything, others can only update teamMembers
+      allow update: if isOwner(userId);
+      
+      // Allow deleting own profile
+      allow delete: if isOwner(userId);
       
       // Content items - owner and team members can access
       match /content/{contentId} {

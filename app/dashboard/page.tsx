@@ -109,11 +109,16 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
   // Spacebar handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only trigger if spacebar is pressed and not in an input/textarea
+      // Only trigger if spacebar is pressed and not in an input/textarea or contenteditable element
+      // Also don't trigger if script editor is open
       if (
         e.code === "Space" &&
         e.target instanceof HTMLElement &&
-        !["INPUT", "TEXTAREA"].includes(e.target.tagName)
+        !["INPUT", "TEXTAREA"].includes(e.target.tagName) &&
+        !e.target.isContentEditable &&
+        !e.target.closest('[contenteditable="true"]') &&
+        !e.target.closest('.ProseMirror') && // Tiptap editor
+        !scriptEditorItem // Don't trigger when script editor is open
       ) {
         e.preventDefault();
         setIsQuickAddOpen((prev) => !prev);
@@ -122,7 +127,7 @@ function AuthenticatedDashboard({ user, onSignOut }: { user: any; onSignOut: () 
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [scriptEditorItem]);
 
   // Filtering Logic
   const filteredItems = contentItems.filter((item) => {
